@@ -13,7 +13,7 @@ flowchart TB
 
     subgraph api["Backend API [Container]"]
         direction TB
-        http["HTTP API<br/><i>[Component]</i><br/>REST endpoints, request validation,<br/>ProblemDetails error mapping"]
+        http["HTTP API<br/><i>[Component]</i><br/>FastAPI routers, Pydantic validation,<br/>problem+json error mapping"]
         identity["Identity & Access<br/><i>[Component]</i><br/>Login, JWT, RBAC,<br/>own-record policy"]
         intake["Integration Intake<br/><i>[Component]</i><br/>API key check, idempotent intake<br/>of tickets, changes, logs"]
         masking["Log Masking<br/><i>[Component]</i><br/>Removes user names, e-mails,<br/>IPs, paths from log messages"]

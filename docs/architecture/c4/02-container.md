@@ -15,8 +15,8 @@ flowchart TB
             web["Web Frontend<br/><i>[Container: React + Vite SPA]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
         end
         subgraph application["Application"]
-            api["Backend API<br/><i>[Container: ASP.NET Core Web API]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
-            worker["Analysis Worker<br/><i>[Container: .NET Worker Service]</i><br/>Baseline, anomaly detection, suspect ranking,<br/>log classification and linking, AI suggestions"]
+            api["Backend API<br/><i>[Container: Python + FastAPI]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
+            worker["Analysis Worker<br/><i>[Container: Python worker process]</i><br/>Baseline, anomaly detection, suspect ranking,<br/>log classification and linking, AI suggestions"]
         end
         subgraph data["Data"]
             db[("PostgreSQL<br/><i>[Container: Database]</i><br/>Changes, tickets, logs, baselines, anomalies,<br/>suspects, suggestions, feedback, jobs, audit")]
@@ -48,12 +48,12 @@ flowchart TB
 | Container | Technology (proposed) | Responsibility | Status |
 |---|---|---|---|
 | Web Frontend | React, Vite | UI, route and role guards, charts, forms, tables; hides controls a role cannot use | Not started |
-| Backend API | C#, ASP.NET Core Web API, REST/JSON | Trust boundary: authentication, RBAC, own-record rule, validation, CRUD, import, integration intake, masking on receipt, feedback and confirmation | Not started |
-| Analysis Worker | C#, .NET Worker Service | Scheduled and on-demand jobs: baseline, anomaly detection, suspect ranking, log classification and linking, evidence collection, LLM calls, evidence validation | Not started |
+| Backend API | Python, FastAPI, Pydantic, SQLAlchemy, REST/JSON | Trust boundary: authentication, RBAC, own-record rule, validation, CRUD, import, integration intake, masking on receipt, feedback and confirmation | Not started |
+| Analysis Worker | Python worker process (same codebase as the API), pandas/NumPy, LLM SDK | Scheduled and on-demand jobs: baseline, anomaly detection, suspect ranking, log classification and linking, evidence collection, LLM calls, evidence validation | Not started |
 | PostgreSQL | PostgreSQL | Persistent data, job table, audit log | Not started |
 | File Storage | Filesystem outside the web root (object storage later if needed) | Import files addressed by generated keys | Not started |
 
-The technology column is a proposal so the diagram can be concrete; it can be changed without changing the container boundaries.
+Python and FastAPI are chosen for the whole backend because the AI part (log analysis, LLM calls, baseline and anomaly statistics) has the strongest library support in Python. The Backend API and the Analysis Worker live in one Python codebase and share the domain models and the database layer; they are deployed as two processes from the same image. FastAPI also generates OpenAPI from code, which can be checked against `docs/api/openapi.yaml`.
 
 ## Architecture Rules
 

@@ -277,8 +277,8 @@ flowchart TB
             web["Web Frontend<br/><i>[Container: React + Vite SPA]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
         end
         subgraph application["Application"]
-            api["Backend API<br/><i>[Container: ASP.NET Core Web API]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
-            worker["Analysis Worker<br/><i>[Container: .NET Worker Service]</i><br/>Baseline, anomaly detection, suspect ranking,<br/>log classification and linking, AI suggestions"]
+            api["Backend API<br/><i>[Container: Python + FastAPI]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
+            worker["Analysis Worker<br/><i>[Container: Python worker process]</i><br/>Baseline, anomaly detection, suspect ranking,<br/>log classification and linking, AI suggestions"]
         end
         subgraph data["Data"]
             db[("PostgreSQL<br/><i>[Container: Database]</i><br/>Changes, tickets, logs, baselines, anomalies,<br/>suspects, suggestions, feedback, jobs, audit")]
@@ -320,7 +320,7 @@ flowchart TB
 
     subgraph api["Backend API [Container]"]
         direction TB
-        http["HTTP API<br/><i>[Component]</i><br/>REST endpoints, request validation,<br/>ProblemDetails error mapping"]
+        http["HTTP API<br/><i>[Component]</i><br/>FastAPI routers, Pydantic validation,<br/>problem+json error mapping"]
         identity["Identity & Access<br/><i>[Component]</i><br/>Login, JWT, RBAC,<br/>own-record policy"]
         intake["Integration Intake<br/><i>[Component]</i><br/>API key check, idempotent intake<br/>of tickets, changes, logs"]
         masking["Log Masking<br/><i>[Component]</i><br/>Removes user names, e-mails,<br/>IPs, paths from log messages"]
