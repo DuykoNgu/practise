@@ -17,7 +17,7 @@
 | Q-11 | F09 lists managing categories and department/branch/software mappings, but openapi.yaml only has `GET /lookups`. Seed-only in V1, or add endpoints? | PLT-2, SCR-60 | Product owner | Open |
 | Q-12 | How are ITSM and log-source API clients created and rotated (no endpoint)? Seed/CLI script? | PLT-2, API-ITSM | Product owner | Open |
 | Q-13 | How are guidelines created (no endpoint)? Seed/CLI script? | SCR-11.3 | Product owner | Open |
-| Q-14 | Health endpoint required by NFR-OBS-001 is not in openapi.yaml. Add `GET /health` outside `/api/v1`? | PLT-1 | Tech lead | Open |
+| Q-14 | Health endpoint required by NFR-OBS-001 is not in openapi.yaml. Add `GET /health` outside `/api/v1`? | PLT-1 | Tech lead | Resolved (D-021): `GET /health` added to openapi.yaml at the root |
 | Q-15 | Where is the failed-login counter for NFR-SEC-003 stored (database table or in-process)? | SCR-01 | Tech lead | Open |
 
 ## Doc inconsistencies

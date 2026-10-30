@@ -33,6 +33,7 @@ The contract is derived from the use cases ([Actors, roles, use cases](../03-use
 
 | Tag | Method | Path | operationId | Purpose | Allowed roles |
 |---|---|---|---|---|---|
+| Health | `GET` | `/health` (application root, outside `/api/v1`) | `getHealth` | Health check: status, database, last worker job; `503` when degraded (NFR-OBS-001) | Public |
 | Auth | `POST` | `/auth/login` | `login` | Log in (UC01) | Public |
 | Auth | `POST` | `/auth/logout` | `logout` | Log out (UC02) | All roles |
 | Dashboard | `GET` | `/dashboard` | `getDashboard` | Incident dashboard (UC03) | All roles |

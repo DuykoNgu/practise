@@ -17,6 +17,7 @@ servers:
   - url: /api/v1
     description: Relative to the application host
 tags:
+  - name: Health
   - name: Auth
   - name: Dashboard
   - name: Anomalies
@@ -34,6 +35,27 @@ tags:
 security:
   - bearerAuth: []
 paths:
+  /health:
+    servers:
+      - url: /
+        description: Served at the application root, outside /api/v1
+    get:
+      tags: [Health]
+      operationId: getHealth
+      summary: Health check for load balancers and monitoring (NFR-OBS-001)
+      security: []
+      x-roles: [PUBLIC]
+      responses:
+        '200':
+          description: API and database are reachable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: A required dependency is unavailable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
   /auth/login:
     post:
       tags: [Auth]
@@ -923,6 +945,13 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/ProblemDetails' }
   schemas:
+    Health:
+      type: object
+      required: [status, database]
+      properties:
+        status: { type: string, enum: [OK, DEGRADED] }
+        database: { type: string, enum: [OK, UNAVAILABLE] }
+        workerLastJobAt: { type: string, format: date-time, nullable: true, description: 'Finish time of the latest job run by any worker' }
     ProblemDetails:
       type: object
       required: [title, status, traceId]

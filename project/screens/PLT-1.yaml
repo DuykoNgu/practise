@@ -16,6 +16,7 @@ docs:
   - docs/architecture/c4/03-component.md
   - docs/architecture/uml/02-sequence-diagrams.md#8-common-error-conventions
   - src/backend/.env.example
+  - docs/api/openapi.yaml
 backend:
   modules: []
   shared:
@@ -27,7 +28,8 @@ backend:
     - app/core/security.py
     - app/core/deps.py
     - app/core/container.py
-  api: []
+  api:
+    - GET /health
   tables: []
   jobs: []
 tasks:
@@ -40,9 +42,9 @@ tasks:
     - "[ ] Dependencies: session, current user, role check, API client"
     - "[ ] Composition root in core/container.py"
     - "[ ] Structured JSON logs with trace id; secrets never logged"
-    - "[ ] Health endpoint (after Q-14)"
+    - "[ ] GET /health at the root: status, database, workerLastJobAt; 503 when the database is down"
   tests:
     - "[ ] Error mapping, JWT expiry, hashing, role-check dependency"
 done_when:
   - API starts, health returns OK, ruff, mypy and pytest pass
-open: [Q-14]
+open: []
