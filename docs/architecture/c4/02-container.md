@@ -12,7 +12,7 @@ flowchart TB
     subgraph platform["CIC [Software System Boundary]"]
         direction TB
         subgraph presentation["Presentation"]
-            web["Web Frontend<br/><i>[Container: Next.js 14 + React 18]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
+            web["Web Frontend<br/><i>[Container: Next.js 16 + React 19]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
         end
         subgraph application["Application"]
             api["Backend API<br/><i>[Container: Python + FastAPI]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
@@ -47,7 +47,7 @@ flowchart TB
 
 | Container | Technology (proposed) | Responsibility | Status |
 |---|---|---|---|
-| Web Frontend | Next.js 14 (App Router), React 18, TypeScript | UI, route and role guards, charts, forms, tables; hides controls a role cannot use | Not started |
+| Web Frontend | Next.js 16 (App Router), React 19, TypeScript | UI, route and role guards, charts, forms, tables; hides controls a role cannot use | Not started |
 | Backend API | Python, FastAPI, Pydantic, SQLAlchemy, REST/JSON | Trust boundary: authentication, RBAC, own-record rule, validation, CRUD, import, integration intake, masking on receipt, feedback and confirmation | Not started |
 | Analysis Worker | Python worker process (same codebase as the API), pandas/NumPy, LLM SDK | Scheduled and on-demand jobs: baseline, anomaly detection, suspect ranking, log classification and linking, evidence collection, LLM calls, evidence validation | Not started |
 | PostgreSQL | PostgreSQL | Persistent data, job table, audit log | Not started |

@@ -2,14 +2,14 @@
 
 > Design status: TARGET V1 · Agreed structure, no application code yet
 
-Frontend: **Next.js 14 (App Router) + React 18 + TypeScript**. Backend: **Python + FastAPI**, organized by **module**, with a separate **AI** package. The Backend API and the Analysis Worker share one codebase and one Docker image (see [C2 — Container](architecture/c4/02-container.md)).
+Frontend: **Next.js 16 (App Router) + React 19 + TypeScript**. Backend: **Python + FastAPI**, organized by **module**, with a separate **AI** package. The Backend API and the Analysis Worker share one codebase and one Docker image (see [C2 — Container](architecture/c4/02-container.md)).
 
 ## 1. Repository
 
 ```text
 practise/
 ├── src/
-│   ├── frontend/                 # Next.js 14 + React 18 (Web Frontend)
+│   ├── frontend/                 # Next.js 16 + React 19 (Web Frontend)
 │   ├── backend/                  # FastAPI API + Analysis Worker, one codebase
 │   └── database/
 │       └── cic.sql               # PostgreSQL schema (becomes the first migration)
@@ -23,7 +23,7 @@ practise/
 └── README.md
 ```
 
-## 2. Frontend — Next.js 14 + React 18
+## 2. Frontend — Next.js 16 + React 19
 
 ```text
 src/frontend/
@@ -53,7 +53,7 @@ src/frontend/
 │   ├── api-client.ts             # Adds the JWT, handles 401/403, reads problem+json
 │   ├── api-types.ts              # Generated from docs/api/openapi.yaml
 │   └── format.ts                 # Dates, times, time zones
-├── middleware.ts                 # Redirects by login state and role
+├── proxy.ts                      # Redirects by login state and role (Next.js 16 name for middleware)
 ├── tests/
 ├── .env.example
 └── package.json

@@ -274,7 +274,7 @@ flowchart TB
     subgraph platform["CIC [Software System Boundary]"]
         direction TB
         subgraph presentation["Presentation"]
-            web["Web Frontend<br/><i>[Container: Next.js 14 + React 18]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
+            web["Web Frontend<br/><i>[Container: Next.js 16 + React 19]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
         end
         subgraph application["Application"]
             api["Backend API<br/><i>[Container: Python + FastAPI]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
@@ -518,14 +518,14 @@ The REST contract is defined with OpenAPI 3.0 and derived from the use cases and
 
 ## 5. Frontend and Backend Folder Structures
 
-The frontend uses **Next.js 14 + React 18 + TypeScript**. The backend uses **Python + FastAPI**, organized by module, with a separate AI package; the API and the worker share one codebase.
+The frontend uses **Next.js 16 + React 19 + TypeScript**. The backend uses **Python + FastAPI**, organized by module, with a separate AI package; the API and the worker share one codebase.
 
 ### 5.1 Repository layout
 
 ```text
 practise/
 ├── src/
-│   ├── frontend/                 # Next.js 14 + React 18 (Web Frontend)
+│   ├── frontend/                 # Next.js 16 + React 19 (Web Frontend)
 │   ├── backend/                  # FastAPI API + Analysis Worker, one codebase
 │   └── database/cic.sql          # PostgreSQL schema
 ├── docs/                         # Requirements, IA, C4, data model, API, folder structure
@@ -543,7 +543,7 @@ src/frontend/
 │                        # baseline, audit, settings, users, profile (components/, hooks/, api.ts)
 ├── components/          # Shared UI
 ├── lib/                 # api-client, api-types (from OpenAPI), formatting
-├── middleware.ts        # Login and role redirects
+├── proxy.ts             # Login and role redirects (Next.js 16 name for middleware)
 ├── tests/
 └── .env.example
 ```
