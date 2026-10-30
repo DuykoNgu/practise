@@ -11,7 +11,17 @@ This folder tracks **how** CIC V1 gets built: milestones, backlog, progress per 
 | [decisions.md](decisions.md) | Decision log with reasons | A technical or product decision is made |
 | [risks-and-questions.md](risks-and-questions.md) | Risks, open questions, doc inconsistencies | A risk or question appears or is resolved |
 | [sprints/](sprints/README.md) | Sprint template and sprint plans | A sprint is planned or reviewed |
-| [plans/](plans/ai-package.md) | Work plans for larger tracks (AI package and evals) | A plan starts, changes, or a phase finishes |
+| [plans/](plans/README.md) | One plan per milestone (M0–M6) and the AI track; every work item has an ID | A plan item starts, changes, or finishes |
+
+## Run a work item
+
+Use the project command in Claude Code:
+
+```text
+/implement M1-1
+```
+
+It reads the item in [plans/](plans/README.md), checks [tracker.md](tracker.md), backlog, open questions, decisions, and the definition of done, then the linked docs, and only then writes code, runs the checks, updates the tracking files, commits, and pushes. `/implement` with no ID takes the next item that is ready. Source: [.claude/commands/implement.md](../.claude/commands/implement.md).
 
 ## Status legend
 
@@ -27,13 +37,13 @@ This folder tracks **how** CIC V1 gets built: milestones, backlog, progress per 
 
 ```mermaid
 flowchart LR
-    A["Pick next screen<br/>roadmap.md"] --> B["Read docs rows<br/>IA · UC · US · AC · BR · OpenAPI"]
+    A["/implement ID<br/>plans/ item"] --> B["Read docs rows<br/>IA · UC · US · AC · BR · OpenAPI"]
     B --> C["Build backend module<br/>+ tests"]
     C --> D["Build frontend feature<br/>+ tests"]
     D --> E["Run checks<br/>definition-of-done.md"]
     E -->|Fail| C
     E -->|Pass| F["Commit and push"]
-    F --> G["Update tracker.md<br/>and backlog.md"]
+    F --> G["Update plan, tracker.md<br/>and backlog.md"]
     G --> H["Suggest /compact"]
     H --> A
 ```

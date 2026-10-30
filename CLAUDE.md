@@ -4,6 +4,8 @@ These rules apply to every coding task in this repository. They take precedence 
 
 ## 1. Work screen by screen
 
+- Work comes from plan items in [project/plans/](project/plans/README.md) (IDs `M0-1` … `M6-2`, `A1` … `A5`). Start an item with `/implement <ID>`; it checks the plan, then `project/`, then `docs/`, before any code.
+
 - Build one screen at a time, in the order the user asks. A screen is done only when its frontend feature, backend module(s), and tests are all finished and passing.
 - Before coding a screen, read its rows in [Information architecture](docs/04-information-architecture.md) (screen inventory, requirement-to-screen mapping, UI/UX state contract), the related use cases and user stories, and the matching paths in [docs/api/openapi.yaml](docs/api/openapi.yaml).
 - Only touch the frontend feature and backend modules mapped to the current screen. If another module must change, ask the user first.

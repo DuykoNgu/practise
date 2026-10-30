@@ -1,6 +1,6 @@
 # Roadmap — CIC V1
 
-Milestones follow the dependency chain in the [INVEST backlog](../docs/05-invest-requirements.md): access first, then reference data, then data intake, then detection, then AI evidence. Each milestone is built screen by screen as required by [`CLAUDE.md`](../CLAUDE.md). No dates are fixed yet; see [risks-and-questions.md](risks-and-questions.md#open-questions).
+Detailed work items for every milestone: [plans/](plans/README.md). Milestones follow the dependency chain in the [INVEST backlog](../docs/05-invest-requirements.md): access first, then reference data, then data intake, then detection, then AI evidence. Each milestone is built screen by screen as required by [`CLAUDE.md`](../CLAUDE.md). No dates are fixed yet; see [risks-and-questions.md](risks-and-questions.md#open-questions).
 
 ```mermaid
 flowchart LR
