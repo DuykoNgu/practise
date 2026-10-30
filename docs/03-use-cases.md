@@ -1,90 +1,94 @@
-# 03. Tác nhân, vai trò và Use case
+# Actors, roles, use cases
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
+>
+> Current implementation: none (documentation phase)
 
-## 1. Tác nhân
+Product name: **CIC**.
 
-| Tác nhân | Mô tả |
-|---|---|
-| **Quản trị viên (Admin)** | Quản lý người dùng, cấu hình hệ thống, có toàn quyền. |
-| **Quản lý IT (IT Manager)** | Theo dõi sự cố, xem nghi phạm, ra quyết định rollback, xem nhật ký. |
-| **Kỹ sư thay đổi (Change Engineer)** | Người thực hiện change; tạo/cập nhật change record và kế hoạch rollback. |
-| **Nhân viên service desk (Agent)** | Tiếp nhận ticket, theo dõi anomaly, xem nghi phạm để định tuyến ticket. |
-| **Hệ thống ITSM (tác nhân hệ thống)** | Đẩy ticket/change qua API. |
-| **Bộ xử lý nền (tác nhân hệ thống)** | Chạy tính baseline, phát hiện bất thường, xếp hạng. |
+## Actors / roles
 
-## 2. Danh sách Use case
-
-| ID | Use case | Tác nhân chính |
+| Role | Display name in UI | Description |
 |---|---|---|
-| UC01 | Đăng nhập | Tất cả người dùng |
-| UC02 | Đăng xuất | Tất cả người dùng |
-| UC03 | Xem dashboard sự cố | Tất cả người dùng |
-| UC04 | Xem danh sách / chi tiết change | Tất cả người dùng |
-| UC05 | Tạo change record | Change Engineer, IT Manager, Admin |
-| UC06 | Sửa change record / đổi trạng thái | Change Engineer (change của mình), IT Manager, Admin |
-| UC07 | Xem danh sách / chi tiết ticket | Tất cả người dùng |
-| UC08 | Tạo ticket thủ công | Agent, IT Manager, Admin |
-| UC09 | Import ticket từ CSV/Excel | Agent, IT Manager, Admin |
-| UC10 | Nhận ticket/change qua API | ITSM (hệ thống) |
-| UC11 | Xem baseline | Agent, IT Manager, Admin |
-| UC12 | Tính lại baseline | IT Manager, Admin |
-| UC13 | Phát hiện bất thường | Bộ xử lý nền |
-| UC14 | Xem chi tiết anomaly và nghi phạm xếp hạng | Tất cả người dùng |
-| UC15 | Phản hồi nghi phạm (đúng / không liên quan) | Agent, IT Manager, Change Engineer, Admin |
-| UC16 | Xem nhật ký hoạt động | IT Manager, Admin |
-| UC17 | Cấu hình ngưỡng, cửa sổ truy vết, trọng số | Admin |
-| UC18 | Quản lý người dùng | Admin |
-| UC19 | Quản lý hồ sơ cá nhân / đổi mật khẩu | Tất cả người dùng |
+| `ADMIN` | Administrator | Manages users and system configuration; full access. |
+| `IT_MANAGER` | IT Manager | Monitors incidents, reviews suspects, decides on rollback, reads the audit log. |
+| `CHANGE_ENGINEER` | Change Engineer | Performs changes; maintains change records and rollback plans. |
+| `AGENT` | Service Desk Agent | Handles tickets, watches anomalies, uses suspects to route tickets. |
 
-## 3. Use case chính: UC14 Xem chi tiết anomaly và nghi phạm
+System actors:
 
-| Mục | Nội dung |
+| Actor | Description |
 |---|---|
-| Tiền điều kiện | Đã đăng nhập; tồn tại anomaly đã được phát hiện. |
-| Luồng chính | 1. Người dùng mở dashboard và chọn một anomaly. 2. Hệ thống hiển thị nhóm bị ảnh hưởng, khoảng thời gian, số ticket thực tế so với baseline. 3. Hệ thống hiển thị danh sách change nghi phạm theo điểm giảm dần, mỗi mục có giải thích yếu tố. 4. Người dùng mở một nghi phạm để xem ticket liên quan, người thực hiện, kế hoạch rollback. |
-| Luồng thay thế | Không có change nào trong cửa sổ truy vết → hiển thị "Không tìm thấy nghi phạm" và gợi ý mở rộng cửa sổ. |
-| Hậu điều kiện | Không thay đổi dữ liệu; hành động xem được ghi nhật ký nếu bật cấu hình. |
+| ITSM system | Pushes tickets and changes through the API. |
+| Background processor | Computes baselines, detects anomalies, ranks suspects. |
 
-## 4. Vai trò và quyền hạn
+## Role × feature matrix
 
-| Chức năng | Admin | IT Manager | Change Engineer | Agent |
+| Feature | Admin | IT Manager | Change Engineer | Agent |
 |---|---|---|---|---|
-| Xem dashboard, anomaly, nghi phạm | Có | Có | Có | Có |
-| Xem change và ticket | Có | Có | Có | Có |
-| Tạo change | Có | Có | Có | Không |
-| Sửa change | Có | Có | Chỉ change của mình | Không |
-| Tạo / import ticket | Có | Có | Không | Có |
-| Xem / tính lại baseline | Có | Có | Chỉ xem | Chỉ xem |
-| Phản hồi nghi phạm | Có | Có | Có | Có |
-| Nhật ký hoạt động | Có | Có | Không | Không |
-| Cấu hình hệ thống | Có | Không | Không | Không |
-| Quản lý người dùng | Có | Không | Không | Không |
+| Dashboard | ✓ | ✓ | ✓ | ✓ |
+| View anomalies and suspects | ✓ | ✓ | ✓ | ✓ |
+| Give suspect feedback | ✓ | ✓ | ✓ | ✓ |
+| View changes | ✓ | ✓ | ✓ | ✓ |
+| Add change | ✓ | ✓ | ✓ | |
+| Edit change | ✓ | ✓ | Own records | |
+| View tickets | ✓ | ✓ | ✓ | ✓ |
+| Add / import tickets | ✓ | ✓ | | ✓ |
+| View baseline | ✓ | ✓ | ✓ | ✓ |
+| Recompute baseline | ✓ | ✓ | | |
+| Audit log | ✓ | ✓ | | |
+| System configuration | ✓ | | | |
+| Users | ✓ | | | |
+| Personal profile | ✓ | ✓ | ✓ | ✓ |
 
-Backend phải thực thi RBAC và chính sách "chỉ change của mình"; việc ẩn nút ở giao diện chỉ phục vụ UI/UX.
+Menus / buttons are **not displayed** when the user lacks permission. Unauthorized access resolves to the 403 screen. The backend enforces the same rules.
 
-## 5. User story V1 (đánh giá theo INVEST)
+## Use case list
 
-| ID | Là một... | Tôi muốn... | Để... | UC |
-|---|---|---|---|---|
-| US01 | Người dùng | đăng nhập bằng email và mật khẩu | truy cập đúng phần việc của mình | UC01 |
-| US02 | Người dùng | đăng xuất | kết thúc phiên an toàn | UC02 |
-| US03 | Agent | xem dashboard anomaly đang mở | biết ngay có đợt tăng ticket bất thường | UC03 |
-| US04 | Change Engineer | tạo change record kèm phạm vi và kế hoạch rollback | thay đổi của tôi có thể được truy vết | UC05 |
-| US05 | Change Engineer | sửa change và đổi trạng thái (kể cả đã rollback) | dữ liệu phản ánh đúng thực tế | UC06 |
-| US06 | Người dùng | lọc và xem chi tiết change | tra cứu thay đổi gần đây | UC04 |
-| US07 | Agent | thêm ticket thủ công | ghi nhận báo cáo của người dùng | UC08 |
-| US08 | Agent | import ticket từ CSV/Excel có xem trước | nạp dữ liệu hàng loạt mà không sai sót | UC09 |
-| US09 | Người dùng | lọc và xem chi tiết ticket | xem các ticket cùng nhóm | UC07 |
-| US10 | IT Manager | xem baseline so với thực tế | hiểu mức ticket bình thường | UC11 |
-| US11 | IT Manager | tính lại baseline | cập nhật theo dữ liệu mới | UC12 |
-| US12 | Agent | xem anomaly và danh sách change nghi phạm đã xếp hạng, có giải thích | nhanh chóng nối ticket với thay đổi | UC14 |
-| US13 | IT Manager | xem kế hoạch rollback và người thực hiện của nghi phạm | quyết định rollback kịp thời | UC14 |
-| US14 | Agent | xác nhận nghi phạm đúng hoặc không liên quan | cải thiện độ chính xác của hệ thống | UC15 |
-| US15 | IT Manager | xem nhật ký hoạt động | kiểm tra ai đã làm gì | UC16 |
-| US16 | Admin | cấu hình ngưỡng, cửa sổ truy vết, trọng số | điều chỉnh theo thực tế tổ chức | UC17 |
-| US17 | Admin | quản lý người dùng và vai trò | kiểm soát quyền truy cập | UC18 |
-| US18 | Người dùng | cập nhật hồ sơ và đổi mật khẩu | giữ tài khoản an toàn | UC19 |
-| US19 | ITSM | gửi ticket/change qua API | dữ liệu tự động đồng bộ | UC10 |
+| ID | Use case | Primary actor |
+|---|---|---|
+| UC01 | Login | All users |
+| UC02 | Logout | All users |
+| UC03 | View incident dashboard | All users |
+| UC04 | View change list and detail | All users |
+| UC05 | Create change record | Change Engineer, IT Manager, Admin |
+| UC06 | Edit change record / update status | Change Engineer (own), IT Manager, Admin |
+| UC07 | View ticket list and detail | All users |
+| UC08 | Add ticket manually | Agent, IT Manager, Admin |
+| UC09 | Import tickets from CSV/Excel | Agent, IT Manager, Admin |
+| UC10 | Receive tickets/changes through the API | ITSM system |
+| UC11 | View baseline | All users |
+| UC12 | Recompute baseline | IT Manager, Admin |
+| UC13 | Detect anomalies and rank suspects | Background processor |
+| UC14 | View anomaly detail and ranked suspects | All users |
+| UC15 | Give suspect feedback (correct cause / unrelated) | All users |
+| UC16 | View audit log | IT Manager, Admin |
+| UC17 | Configure thresholds, tracing window, weights | Admin |
+| UC18 | Manage users | Admin |
+| UC19 | Manage personal profile / change password | All users |
 
-Tiêu chí INVEST áp dụng: **I**ndependent (độc lập), **N**egotiable (có thể thương lượng), **V**aluable (có giá trị), **E**stimable (ước lượng được), **S**mall (đủ nhỏ), **T**estable (kiểm thử được). Tiêu chí chấp nhận chi tiết sẽ được bổ sung ở giai đoạn sau.
+## Use Case Diagram
+
+The use case diagram is maintained in the [project README](../README.md#13-use-cases).
+
+## Main use case: UC14 View anomaly detail and ranked suspects
+
+| Item | Content |
+|---|---|
+| Precondition | The user is logged in and at least one anomaly exists. |
+| Main flow | 1. The user opens the dashboard and selects an anomaly. 2. The system shows the affected group, time range, and actual versus baseline tickets. 3. The system lists suspect changes by descending score, each with a per-factor explanation. 4. The user opens a suspect to see related tickets, implementer, and rollback plan. |
+| Alternative flow | No change inside the tracing window → show "No suspect found" and suggest widening the window. |
+| Postcondition | No data is changed. |
+
+## Business flow: from change to suspect
+
+```mermaid
+flowchart LR
+    Change["Change recorded"] --> Window["Inside tracing window"]
+    Tickets["Tickets arrive"] --> Detect["Volume exceeds baseline"]
+    Detect --> Anomaly["Anomaly created"]
+    Anomaly --> Rank["Score recent changes"]
+    Window --> Rank
+    Rank --> Suspects["Ranked suspects with explanation"]
+    Suspects --> Decide["User verifies, rolls back, gives feedback"]
+```

@@ -1,160 +1,181 @@
-# 04. Kiến trúc thông tin (Information Architecture)
+# Information architecture
 
-> Trạng thái thiết kế: TARGET V1
-
-Kiến trúc thông tin tổ chức không gian làm việc sau đăng nhập theo **năng lực nghiệp vụ**. Điều hướng và quyền truy cập từng trang tuân theo ma trận vai trò; mục không đủ quyền **không hiển thị** trên thanh điều hướng.
-
-## 1. Cây thông tin
+> Design status: TARGET V1
+>
+> Current implementation: none (documentation phase)
 
 ```text
-Change-Incident Correlation
+CIC
 │
-├── Công khai
-│   └── Đăng nhập
+├── Public
+│   └── Login
 │
-└── Sau đăng nhập (sidebar + topbar)
-    ├── Dashboard sự cố
-    │   ├── Anomaly đang mở
-    │   ├── Biểu đồ ticket so với baseline
-    │   └── Top nghi phạm
-    ├── Anomaly
-    │   ├── Danh sách (lọc theo nhóm, thời gian, mức nghiêm trọng)
-    │   └── Chi tiết anomaly
-    │       ├── Nghi phạm xếp hạng (+ giải thích điểm)
-    │       ├── Ticket liên quan
-    │       ├── Dòng thời gian (change + ticket)
-    │       └── Phản hồi nghi phạm
-    ├── Change
-    │   ├── Danh sách (bảng, bộ lọc, phân trang)
-    │   ├── Modal thêm / sửa
-    │   └── Chi tiết (phạm vi, người thực hiện, kế hoạch rollback)
-    ├── Ticket
-    │   ├── Danh sách
-    │   ├── Modal thêm
-    │   └── Import (xem trước, lịch sử import)
+└── Authenticated (sidebar + topbar)
+    ├── Dashboard
+    │   ├── Open anomalies
+    │   ├── Tickets versus baseline chart
+    │   └── Top suspects
+    ├── Anomalies
+    │   ├── List (filter by group, time, severity)
+    │   └── Anomaly detail
+    │       ├── Ranked suspects (with score explanation)
+    │       ├── Related tickets
+    │       ├── Timeline (changes and tickets)
+    │       └── Suspect feedback
+    ├── Changes
+    │   ├── List (table, filters, pagination)
+    │   ├── Add / edit modal
+    │   └── Detail modal (scope, implementer, rollback plan)
+    ├── Tickets
+    │   ├── List
+    │   ├── Add modal
+    │   └── Import (preview, history)
     ├── Baseline
-    │   ├── Biểu đồ theo khung giờ / thứ / danh mục
-    │   └── Tính lại baseline
-    ├── Nhật ký hoạt động
-    ├── Cấu hình
-    │   ├── Ngưỡng & cửa sổ truy vết
-    │   ├── Trọng số xếp hạng
-    │   └── Danh mục & ánh xạ phạm vi
-    ├── Người dùng
-    ├── Hồ sơ cá nhân
-    │   ├── Tài khoản
-    │   ├── Bảo mật
-    │   └── Vai trò & quyền
-    └── 403 Không đủ quyền
+    │   ├── Chart by hour slot / weekday / category
+    │   └── Recompute
+    ├── Activity Log
+    ├── Settings
+    │   ├── Thresholds and tracing window
+    │   ├── Ranking weights
+    │   └── Categories and scope mappings
+    ├── User Management
+    ├── Personal Profile
+    │   ├── Account
+    │   ├── Security
+    │   └── Roles & Permissions
+    └── 403
 ```
 
-## 2. Phân quyền theo trang
+Routes: `/login` `/dashboard` `/anomalies` `/anomalies/:id` `/changes` `/tickets` `/tickets/import` `/baseline` `/audit` `/settings` `/users` `/profile` `/403`.
 
-| Trang | Ai được truy cập |
+Change, ticket, and user forms open as a **modal** on the list page. Route-level modal URLs are a target design decision to be confirmed during UI implementation.
+
+**Time display:** every timestamp shows its time zone. Anomaly and suspect times are shown in the viewer's time zone.
+
+## Page permissions
+
+| Page | Who can access |
 |---|---|
-| Dashboard, Anomaly, Hồ sơ cá nhân | Mọi vai trò |
-| Change (xem) / Ticket (xem) | Mọi vai trò |
-| Thêm / sửa Change | Admin, IT Manager, Change Engineer (sửa change của mình) |
-| Thêm / Import Ticket | Admin, IT Manager, Agent |
-| Baseline | Mọi vai trò xem; Admin, IT Manager tính lại |
-| Nhật ký hoạt động | Admin, IT Manager |
-| Cấu hình | Admin |
-| Người dùng | Admin |
-| Không đủ quyền | `/403` |
+| Dashboard, anomalies, profile | all roles |
+| Changes / tickets (view) | all roles |
+| Add/edit changes | ADMIN, IT_MANAGER, CHANGE_ENGINEER (own records only) |
+| Add / import tickets | ADMIN, IT_MANAGER, AGENT |
+| Baseline | all roles view; ADMIN, IT_MANAGER recompute |
+| Activity Log | ADMIN, IT_MANAGER |
+| Settings | ADMIN only |
+| Users | ADMIN only |
+| Unauthorized | `/403` |
 
-## 3. Danh mục màn hình
+Unauthorized items are **not rendered** in the sidebar.
 
-| Mã | Màn hình | Hình thức | Use case |
+## Screen inventory
+
+| Screen ID | Screen | Presentation | Related use cases |
 |---|---|---|---|
-| SCR-01 | Đăng nhập | Trang | UC01, UC02 |
-| SCR-02 | Dashboard sự cố | Trang | UC03 |
-| SCR-10 | Danh sách anomaly | Trang | UC14 |
-| SCR-11 | Chi tiết anomaly và nghi phạm | Trang | UC14, UC15 |
-| SCR-20 | Danh sách change | Trang | UC04 |
-| SCR-21 | Thêm / sửa change | Modal trên danh sách change | UC05, UC06 |
-| SCR-22 | Chi tiết change | Modal trên danh sách change | UC04 |
-| SCR-30 | Danh sách ticket | Trang | UC07, UC08 |
-| SCR-31 | Import ticket (xem trước / lịch sử) | Trang | UC09 |
-| SCR-40 | Baseline | Trang | UC11, UC12 |
-| SCR-50 | Nhật ký hoạt động | Trang | UC16 |
-| SCR-60 | Cấu hình hệ thống | Trang có tab | UC17 |
-| SCR-70 | Quản lý người dùng | Trang + modal | UC18 |
-| SCR-80 | Hồ sơ cá nhân | Trang có tab | UC19 |
-| SCR-90 | Không đủ quyền (403) | Trang | Phân quyền chung |
+| `SCR-01` | Login | Page | UC01, UC02 |
+| `SCR-02` | Dashboard | Page | UC03 |
+| `SCR-10` | Anomaly list | Page | UC14 |
+| `SCR-11` | Anomaly detail and suspects | Page | UC14, UC15 |
+| `SCR-20` | Change list | Page | UC04 |
+| `SCR-21` | Change create / edit | Modal on change list | UC05, UC06 |
+| `SCR-22` | Change detail | Modal on change list | UC04 |
+| `SCR-30` | Ticket list | Page | UC07, UC08 |
+| `SCR-31` | Ticket import preview/history | Page | UC09 |
+| `SCR-40` | Baseline | Page | UC11, UC12 |
+| `SCR-50` | Audit log | Page | UC16 |
+| `SCR-60` | Settings | Tabbed page | UC17 |
+| `SCR-70` | User management | Page with form modal | UC18 |
+| `SCR-80` | Personal profile | Tabbed page | UC19 |
+| `SCR-90` | Forbidden | Page | Cross-cutting authorization |
 
-## 4. Ánh xạ use case — màn hình
+## Requirement-to-screen mapping
 
-| Use case | Màn hình / hành động chính |
+| Requirement | Primary screen/action |
 |---|---|
-| UC01, UC02 | SCR-01 đăng nhập; đăng xuất tại shell, quay về SCR-01 |
-| UC03 | SCR-02 đổi khoảng thời gian, lọc nhóm |
-| UC04 | SCR-20 lọc/xem danh sách, SCR-22 xem chi tiết |
-| UC05, UC06 | SCR-21 gửi biểu mẫu tạo/sửa change |
-| UC07, UC08 | SCR-30 lọc danh sách, thêm ticket |
-| UC09 | SCR-31 xem trước, xác nhận import, xem lịch sử |
-| UC10, UC13 | Không có màn hình riêng (API / tiến trình nền); kết quả hiện ở SCR-02, SCR-10 |
-| UC11, UC12 | SCR-40 xem biểu đồ, tính lại |
-| UC14, UC15 | SCR-11 xem nghi phạm, gửi phản hồi |
-| UC16 | SCR-50 |
-| UC17 | SCR-60 |
-| UC18 | SCR-70 |
-| UC19 | SCR-80 |
+| US01 | `SCR-01` submit login |
+| US02 | Authenticated shell logout action, returning to `SCR-01` |
+| US03 | `SCR-02` change date range / filter group |
+| US04 | `SCR-21` submit change creation |
+| US05 | `SCR-21` submit change update / status change |
+| US06 | `SCR-20` filter/list and `SCR-22` inspect change |
+| US07 | `SCR-30` submit ticket creation |
+| US08 | `SCR-31` preview, submit, and inspect import status/history |
+| US09 | `SCR-30` filter/list and inspect ticket |
+| US10 | `SCR-40` inspect baseline versus actual |
+| US11 | `SCR-40` recompute baseline |
+| US12 | `SCR-10` list and `SCR-11` inspect ranked suspects |
+| US13 | `SCR-11` open suspect to see rollback plan and implementer |
+| US14 | `SCR-11` submit suspect feedback |
+| US15 | `SCR-50` filter and inspect audit events |
+| US16 | `SCR-60` edit thresholds, window, weights |
+| US17 | `SCR-70` list/create/edit/enable/disable users |
+| US18 | `SCR-80` update profile or change password |
+| US19 | No screen (API); results appear on `SCR-20`, `SCR-30` |
 
-## 5. Phân cấp màn hình
+## Screen hierarchy
 
 ```mermaid
 flowchart TB
-    Login["Đăng nhập"] --> Shell["Shell (sidebar + topbar)"]
-    Shell --> Dash["Dashboard sự cố"]
-    Shell --> Anom["Danh sách anomaly"]
-    Anom --> AnomDetail["Chi tiết anomaly + nghi phạm"]
-    Dash --> AnomDetail
-    Shell --> Chg["Danh sách change"]
-    Chg --> ChgForm["Modal thêm / sửa change"]
-    Chg --> ChgDetail["Modal chi tiết change"]
-    AnomDetail --> ChgDetail
-    Shell --> Tkt["Danh sách ticket"]
-    Tkt --> Imp["Import ticket"]
-    Shell --> Base["Baseline"]
-    Shell --> Audit["Nhật ký hoạt động"]
-    Shell --> Cfg["Cấu hình"]
-    Shell --> Users["Người dùng"]
-    Users --> UserForm["Modal thêm / sửa người dùng"]
-    Shell --> Profile["Hồ sơ cá nhân"]
-    Shell --> Forbidden["403"]
+    Login["Login"] --> Shell["Authenticated shell"]
+    Shell --> Dashboard["Dashboard"]
+    Shell --> Anomalies["Anomaly list"]
+    Anomalies --> AnomalyDetail["Anomaly detail and ranked suspects"]
+    Dashboard --> AnomalyDetail
+    Shell --> Changes["Change list"]
+    Changes --> ChangeForm["Add or edit change modal"]
+    Changes --> ChangeDetail["Change detail modal"]
+    AnomalyDetail --> ChangeDetail
+    Shell --> Tickets["Ticket list"]
+    Tickets --> Import["Ticket import preview and history"]
+    Shell --> Baseline["Baseline"]
+    Shell --> Audit["Audit log"]
+    Shell --> Settings["Settings"]
+    Shell --> Users["User management"]
+    Users --> UserForm["Add or edit user modal"]
+    Shell --> Profile["Profile"]
+    Profile --> Account["Account"]
+    Profile --> Security["Security"]
+    Profile --> Permissions["Roles and permissions"]
+    Shell --> Forbidden["403 Forbidden"]
 ```
 
-## 6. Luồng tác vụ chính
+## Primary task flows
 
 ```mermaid
 flowchart LR
-    A["Mở dashboard"] --> B["Chọn anomaly"] --> C["Xem nghi phạm xếp hạng"]
-    C --> D["Mở change nghi phạm"] --> E["Xem rollback + người thực hiện"]
-    C --> F["Gửi phản hồi đúng / sai"]
-    G["Mở danh sách"] --> H["Thêm / sửa"] --> I["Kiểm tra phía client"] --> J["Kiểm tra phía API"]
-    J -->|Thành công| K["Làm mới danh sách + thông báo"]
-    J -->|Lỗi trường| H
-    J -->|401| L["Về trang đăng nhập"]
-    J -->|403| M["Hiện trang 403"]
+    A["Open dashboard"] --> B["Select anomaly"] --> C["Review ranked suspects"]
+    C --> D["Open suspect change"] --> E["Check rollback plan and implementer"]
+    C --> F["Give feedback"]
+    G["Open list"] --> H["Add or edit"] --> I["Client validation"] --> J["API validation"]
+    J -->|Success| K["Refresh list and notify"]
+    J -->|Field error| H
+    J -->|401| L["Return to Login"]
+    J -->|403| M["Show Forbidden"]
+    J -->|Conflict| N["Keep input and explain conflict"]
 ```
 
-## 7. Hợp đồng trạng thái UI/UX
+## UI/UX state contract
 
-| Trạng thái | Hành vi bắt buộc |
+| State | Required behavior |
 |---|---|
-| Đang tải lần đầu | Giữ khung trang, hiển thị skeleton cho vùng bị ảnh hưởng. |
-| Rỗng | Giải thích không có bản ghi; phân biệt "chưa có dữ liệu" với "bị lọc hết"; hiện hành động chính nếu được phép. |
-| Lỗi hợp lệ dữ liệu | Giữ giá trị đã nhập, gắn thông báo vào đúng trường, focus vào lỗi đầu tiên. |
-| Lỗi API | Hiện thông báo ngắn gọn kèm mã tham chiếu; không lộ chi tiết kỹ thuật. |
-| Chưa xác thực (401) | Xóa phiên không hợp lệ và về trang đăng nhập. |
-| Không đủ quyền (403) | Giữ phiên, hiện trang 403 có đường quay lại an toàn. |
-| Đang lưu / import | Khóa gửi trùng, hiện tiến trình. |
-| Thành công | Xác nhận, đóng modal khi phù hợp, làm mới dữ liệu liên quan. |
-| Anomaly chưa có nghi phạm | Hiện "Không tìm thấy nghi phạm" kèm gợi ý mở rộng cửa sổ truy vết. |
+| Initial loading | Preserve the page shell; show a skeleton for the affected panel or table. |
+| Empty | Explain that no records match; distinguish an empty dataset from filtered-out results; show a permitted primary action. |
+| No suspect | Show "No suspect found" and suggest widening the tracing window. |
+| Validation error | Keep entered values, associate text with the invalid field, and focus the first error. |
+| API error | Show a concise message with a trace reference; do not expose technical details. |
+| Unauthorized | Clear invalid authentication and return to Login. |
+| Forbidden | Keep authentication and render `/403` with a safe route back. |
+| Saving/importing | Disable duplicate submission and show progress without blocking unrelated navigation unless data loss is possible. |
+| Success | Confirm the action, close the modal when appropriate, and refresh the affected query. |
 
-## 8. Quy tắc responsive và truy cập
+## Responsive and accessibility rules
 
-- Bảng trên desktop giữ đầy đủ cột; màn hình hẹp cuộn ngang hoặc dùng thẻ tóm tắt, không ẩn dữ liệu vĩnh viễn.
-- Modal vừa khung nhìn, giữ nút hành động hiển thị, bẫy focus bàn phím, đóng bằng `Escape` khi không đang gửi, trả focus về nút mở.
-- Mọi ô nhập có nhãn; nút chỉ có biểu tượng có tên truy cập; trạng thái không chỉ truyền đạt bằng màu (điểm khả nghi luôn kèm số và nhãn).
-- Thời gian hiển thị kèm múi giờ; điểm khả nghi hiển thị dạng số 0–100 cùng mức (Cao / Trung bình / Thấp).
+- Desktop tables retain full-column controls; narrow screens use horizontal scrolling or prioritized summary cards without hiding data permanently.
+- Modals fit within the viewport, keep actions visible, trap keyboard focus, close with `Escape` only when no submission is running, and restore focus to the trigger.
+- Every input has a visible label; icon-only buttons have accessible names; status is never communicated by color alone (suspect scores always show the number and a High / Medium / Low label).
+- Keyboard users can reach navigation, filters, rows, modal actions, and pagination in a predictable order.
+- Dates and times have explicit formats and time zones.
+
+## Current UI versus target V1
+
+No UI exists yet; this document is the target design. Field-level coverage of each screen will be reviewed against the data model when it is defined.

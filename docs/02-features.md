@@ -1,76 +1,78 @@
-# 02. Danh mục tính năng (Feature Catalog)
+# Feature Catalog
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 
-| ID | Tên | V1 | Ưu tiên |
+UI product: **CIC**. Target V1 behavior is defined by the use cases, user stories, and later architecture documents.
+
+| ID | Name | V1 | Priority |
 |---|---|---|---|
-| F01 | Xác thực và phân quyền | Có | Must |
-| F02 | Quản lý Change record | Có | Must |
-| F03 | Quản lý / tiếp nhận Ticket | Có | Must |
-| F04 | Baseline | Có | Must |
-| F05 | Phát hiện bất thường | Có | Must |
-| F06 | Tương quan và xếp hạng nghi phạm | Có | Must |
-| F07 | Dashboard và chi tiết sự cố | Có | Must |
-| F08 | Phản hồi chất lượng nghi phạm | Có | Should |
-| F09 | Cấu hình hệ thống | Có | Should |
-| F10 | Nhật ký hoạt động | Có | Should |
-| F11 | Người dùng và hồ sơ cá nhân | Có | Must |
+| F01 | Authentication and authorization | Yes | Must |
+| F02 | Change Management | Yes | Must |
+| F03 | Ticket Management | Yes | Must |
+| F04 | Baseline | Yes | Must |
+| F05 | Anomaly Detection | Yes | Must |
+| F06 | Correlation and Suspect Ranking | Yes | Must |
+| F07 | Dashboard and Incident Detail | Yes | Must |
+| F08 | Suspect Feedback | Yes | Should |
+| F09 | System Configuration | Yes | Should |
+| F10 | Audit Log | Yes | Should |
+| F11 | Users and Profile | Yes | Must |
 
-## F01 Xác thực và phân quyền
+## F01 Authentication and authorization
 
-- F01.1 Đăng nhập (email, mật khẩu)
-- F01.2 Đăng xuất
-- F01.3 Phân quyền theo vai trò (RBAC) do backend thực thi
-- F01.4 Chặn truy cập trang không đủ quyền (màn hình 403)
+- F01.1 Login (email, password)
+- F01.2 Logout
+- F01.3 Role-based access control enforced by the backend
+- F01.4 Route guard and role guard (403 screen)
 
-## F02 Quản lý Change record
+## F02 Change Management
 
-Danh sách có lọc (loại, thời gian, phạm vi, trạng thái), thêm/sửa/xem chi tiết, đổi trạng thái (kể cả đánh dấu đã rollback), đính kèm kế hoạch rollback. Change có thể nhập thủ công, import file hoặc đồng bộ qua API.
+List with filters (type, time, scope, status), add/edit using a **modal**, view details using a **modal**, status updates (including marking a change as rolled back), rollback plan.
 
-Trường chính: loại, tiêu đề, mô tả, thời điểm bắt đầu/kết thúc, phạm vi (nhóm máy, phòng ban, phần mềm, chi nhánh), người thực hiện, người duyệt, kế hoạch rollback, trạng thái.
+Fields: type, title, description, start/end time, scope (device group, department, software, branch), implementer, approver, rollback plan, status. Changes can be entered manually, imported, or synchronized through the API.
 
-## F03 Quản lý / tiếp nhận Ticket
+## F03 Ticket Management
 
-Danh sách có lọc (thời gian, danh mục, phòng ban, chi nhánh, phần mềm), xem chi tiết. Nguồn ticket: nhập tay, import CSV/Excel (xem trước và kiểm tra hợp lệ), API từ ITSM.
+List with filters (time, category, department, branch, software) and detail view. Sources: manual entry, CSV/Excel import (preview and validation), API from an ITSM system.
 
 ## F04 Baseline
 
-Tính và lưu số ticket trung bình theo khung giờ/thứ/danh mục; xem biểu đồ baseline so với thực tế; tính lại theo lịch hoặc theo yêu cầu; loại giai đoạn sự cố khỏi dữ liệu nền.
+Compute and store average tickets per hour slot / weekday / category; chart baseline versus actual; recompute on schedule or on demand; exclude incident periods from the baseline data.
 
-## F05 Phát hiện bất thường
+## F05 Anomaly Detection
 
-Định kỳ so sánh số ticket thực tế với baseline theo từng nhóm (danh mục, phòng ban, chi nhánh, phần mềm). Khi vượt ngưỡng, tạo **Cụm bất thường (Anomaly)** gồm nhóm bị ảnh hưởng, khoảng thời gian, số ticket thực tế/kỳ vọng, mức nghiêm trọng.
+Periodically compare actual ticket volume with the baseline per group (category, department, branch, software). When a threshold is exceeded, create an **anomaly**: affected group, time range, actual versus expected tickets, and severity.
 
-## F06 Tương quan và xếp hạng nghi phạm
+## F06 Correlation and Suspect Ranking
 
-Với mỗi anomaly, tìm các change nằm trong cửa sổ thời gian trước thời điểm bắt đầu tăng và tính điểm khả nghi dựa trên:
+For each anomaly, find changes inside the tracing window before the spike started and compute a suspicion score from:
 
-| Yếu tố | Ý nghĩa |
+| Factor | Meaning |
 |---|---|
-| Gần về thời gian | Change càng sát thời điểm ticket tăng càng khả nghi |
-| Khớp phạm vi | Phòng ban / chi nhánh / phần mềm / nhóm máy của ticket trùng phạm vi change |
-| Khớp danh mục & từ khóa | Danh mục hoặc từ khóa ticket liên quan loại/đối tượng change |
-| Mức bất thường | Ticket tăng bao nhiêu lần so với baseline |
-| Rủi ro change | Loại change, có/không kế hoạch rollback |
+| Time proximity | The closer a change is to the spike, the more suspicious it is |
+| Scope match | The ticket's department / branch / software / device group falls inside the change scope |
+| Category and keyword match | Ticket category or keywords relate to the change type or target |
+| Anomaly magnitude | How many times the ticket volume exceeds baseline |
+| Change risk | Change type and whether a rollback plan exists |
 
-Kết quả: danh sách nghi phạm xếp theo điểm, kèm **giải thích từng yếu tố** để người dùng kiểm chứng. Công thức chi tiết được định nghĩa ở giai đoạn thiết kế thuật toán.
+Result: a suspect list ordered by score, with an **explanation per factor** so users can verify it. The detailed formula is defined in the algorithm design phase.
 
-## F07 Dashboard và chi tiết sự cố
+## F07 Dashboard and Incident Detail
 
-Tổng quan: anomaly đang mở, biểu đồ ticket so với baseline, top nghi phạm. Chi tiết anomaly: nghi phạm xếp hạng, ticket liên quan, dòng thời gian (change + ticket), kế hoạch rollback và người thực hiện.
+Overview: open anomalies, tickets versus baseline chart, top suspects. Anomaly detail: ranked suspects, related tickets, timeline (changes and tickets), rollback plan, and implementer.
 
-## F08 Phản hồi
+## F08 Suspect Feedback
 
-Người dùng xác nhận một nghi phạm là **đúng nguyên nhân / không liên quan**, ghi chú kết luận; dữ liệu dùng để đo độ chính xác và hiệu chỉnh trọng số.
+Users confirm whether a suspect was the **actual cause** or **unrelated**, with an optional note. The data is used to measure accuracy and tune weights.
 
-## F09 Cấu hình hệ thống
+## F09 System Configuration
 
-Ngưỡng bất thường, cửa sổ truy vết (mặc định 48 giờ), trọng số các yếu tố, chu kỳ chạy, danh mục và ánh xạ phòng ban/chi nhánh/phần mềm.
+Anomaly thresholds, tracing window (default 48 hours), factor weights, processing schedule, categories, and department / branch / software mappings.
 
-## F10 Nhật ký hoạt động
+## F10 Audit Log
 
-Ghi lại: đăng nhập, tạo/sửa change, import ticket, thay đổi cấu hình, phản hồi nghi phạm. Cột: người dùng, hành động, đối tượng, chi tiết, thời gian.
+Records login, change create/update, ticket import, configuration changes, and suspect feedback. Columns: user, action, object, details, time.
 
-## F11 Người dùng và hồ sơ cá nhân
+## F11 Users and Profile
 
-Quản trị viên tạo/sửa/vô hiệu hóa người dùng và gán vai trò. Người dùng cập nhật hồ sơ và đổi mật khẩu.
+Administrators create, edit, and disable users and assign roles. Users update their profile and change their password.

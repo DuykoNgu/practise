@@ -1,174 +1,213 @@
 # Change-Incident Correlation (CIC)
 
-Hệ thống truy vết sự cố do thay đổi: khi số ticket tăng bất thường, hệ thống tự trả lời **"thay đổi nào gần đây có khả năng là nguyên nhân?"** và xếp hạng các "nghi phạm".
+Change-Incident Correlation helps IT teams answer one question when tickets suddenly spike: **"Which recent change is most likely the cause?"** It brings together change records, tickets, and historical baselines, detects abnormal ticket volume, and ranks the recent changes as "suspects" with an explainable score, so the service desk no longer depends on a few experienced people to connect the dots.
 
-> **Ví dụ:** 22h thứ Ba, IT cập nhật bản vá Windows cho phòng Kế toán. Sáng thứ Tư có 14 ticket "không in được". CIC phát hiện đợt tăng bất thường, nối với bản vá đó, và đưa nó lên đầu danh sách nghi phạm cùng kế hoạch rollback và người thực hiện.
+> **Real example:** On Tuesday at 22:00, IT applies a Windows patch to the Accounting department. On Wednesday morning, 14 "cannot print" tickets arrive. CIC detects the spike against the baseline, links it to the patch, and puts that change at the top of the suspect list together with its rollback plan and the engineer who applied it.
 
-> **Trạng thái:** giai đoạn tài liệu — hiện có Scope, Features, Use cases và Information Architecture. Các phần kiến trúc kỹ thuật, dữ liệu, API sẽ bổ sung sau.
+## 1. Requirements — INVEST, Use Cases, and Acceptance Criteria
 
-## 1. Yêu cầu — Dữ liệu đầu vào, User story, Use case
+Requirements define what CIC must do, who uses it, the value delivered, and the observable conditions of success. User stories are reviewed with INVEST and mapped to use cases.
 
-### 1.1 Dữ liệu đầu vào
-
-| Nguồn | Nội dung chính |
-|---|---|
-| **Change record** | Loại (bản vá, đổi cấu hình, nâng cấp phần mềm), thời điểm, phạm vi ảnh hưởng (nhóm máy, phòng ban, phần mềm, chi nhánh), người thực hiện, kế hoạch rollback |
-| **Ticket** | Thời điểm, danh mục, người báo (phòng ban, chi nhánh), thiết bị/phần mềm liên quan, mô tả |
-| **Baseline** | Số ticket trung bình theo khung giờ / thứ / danh mục |
-
-Chi tiết trường dữ liệu: [Phạm vi V1](docs/01-scope.md).
-
-### 1.2 Luồng xử lý tổng quát
+### 1.1 Product mind map
 
 ```mermaid
-flowchart LR
-    C["Change record"] --> R["Tương quan & xếp hạng"]
-    T["Ticket"] --> B["Baseline"]
-    T --> A["Phát hiện bất thường"]
-    B --> A
-    A -->|Anomaly| R
-    R --> S["Danh sách nghi phạm<br/>+ điểm + giải thích"]
-    S --> U["Người dùng xem, rollback,<br/>phản hồi"]
-    U -.->|Phản hồi| R
+mindmap
+  root((CIC))
+    Inputs
+      Change records
+        Type: patch, config, upgrade
+        Time
+        Scope: device group, department, software, branch
+        Implementer
+        Rollback plan
+      Tickets
+        Time
+        Category
+        Reporter department and branch
+        Device or software
+        Description
+      Baseline
+        Average tickets per hour, weekday, category
+    Detection
+      Anomaly detection
+      Baseline recompute
+    Correlation
+      Time proximity
+      Scope match
+      Category and keyword match
+      Anomaly magnitude
+      Change risk
+    Output
+      Ranked suspects with explanation
+      Related tickets and timeline
+      Rollback plan and implementer
+      Suspect feedback
+    Governance
+      Roles and permissions
+      Audit log
+      System configuration
 ```
 
-### 1.3 User story
+### 1.2 INVEST requirements
 
-Backlog V1 gồm 19 user story, đánh giá theo INVEST:
+The V1 backlog includes 19 user stories. These stories cover login, change and ticket management, ticket import, baseline, anomaly and suspect review, feedback, audit log, configuration, user management, personal profile, and ITSM API ingestion.
+Before a user story is ready for development, it is checked using the INVEST criteria.
+
+| Criterion       | Meaning in CIC                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Independent** | Each story should provide a clear feature and depend on other stories only when necessary.                          |
+| **Negotiable**  | The UI and technical implementation can change as long as the main goal and permission rules stay the same.         |
+| **Valuable**    | Each story should provide value to the user or the business.                                                        |
+| **Estimable**   | Roles, inputs, outputs, dependencies, and important failure outcomes are documented.                                |
+| **Small**       | Each story covers one primary capability and can be divided into API, application, persistence, UI, and test tasks. |
+| **Testable**    | Every story maps to observable outcomes and expected authorization, validation, and error behavior.                 |
 
 ```text
-US01–US02   Xác thực
-US03        Dashboard sự cố
-US04–US06   Quản lý change
-US07–US09   Quản lý ticket và import
+US01–US02   Authentication and session
+US03        Incident dashboard
+US04–US06   Change management
+US07–US09   Ticket management and import
 US10–US11   Baseline
-US12–US14   Anomaly, nghi phạm, phản hồi
-US15        Nhật ký hoạt động
-US16        Cấu hình
-US17–US18   Người dùng và hồ sơ
-US19        Tích hợp API từ ITSM
+US12–US14   Anomaly, ranked suspects, and feedback
+US15        Audit log
+US16        System configuration
+US17–US18   User management and personal profile
+US19        ITSM API ingestion
 ```
 
-Danh sách đầy đủ: [Tác nhân, vai trò và use case](docs/03-use-cases.md#5-user-story-v1-đánh-giá-theo-invest).
+The complete story-level review is maintained in [INVEST Requirements](docs/05-invest-requirements.md).
 
-### 1.4 Use case
+### 1.3 Use cases
 
 ```mermaid
 flowchart TB
-    subgraph roles["Tác nhân"]
+    subgraph roles["Actors"]
         direction LR
-        admin(["Admin"])
-        mgr(["IT Manager"])
-        eng(["Change Engineer"])
+        admin(["Administrator"])
+        manager(["IT Manager"])
+        engineer(["Change Engineer"])
         agent(["Service Desk Agent"])
     end
 
-    subgraph system["CIC — Ranh giới hệ thống"]
+    subgraph system["CIC — System Boundary"]
         direction LR
-        adminCases["<b>Admin</b><br/><br/>Toàn bộ UC01–UC19<br/>(gồm cấu hình UC17, người dùng UC18)"]
-        mgrCases["<b>IT Manager</b><br/><br/>UC01–UC07 · UC08–UC09 · UC11–UC12<br/>UC14 Xem nghi phạm · UC15 Phản hồi<br/>UC16 Nhật ký · UC19 Hồ sơ"]
-        engCases["<b>Change Engineer</b><br/><br/>UC01–UC04 · UC05–UC06 (change của mình)<br/>UC07 · UC11 · UC14 · UC15 · UC19"]
-        agentCases["<b>Service Desk Agent</b><br/><br/>UC01–UC04 · UC07–UC09<br/>UC11 · UC14 Xem nghi phạm · UC15 Phản hồi · UC19"]
+        adminCases["<b>Administrator</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline · UC12 Recompute Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC16 View Audit Log · UC17 Configure System<br/>UC18 Manage Users"]
+        managerCases["<b>IT Manager</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline · UC12 Recompute Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC16 View Audit Log"]
+        engineerCases["<b>Change Engineer</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Own Changes<br/>UC07 View Tickets · UC11 View Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback"]
+        agentCases["<b>Service Desk Agent</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback"]
     end
 
     admin --> adminCases
-    mgr --> mgrCases
-    eng --> engCases
+    manager --> managerCases
+    engineer --> engineerCases
     agent --> agentCases
 
     classDef actor fill:#666,color:#fff,stroke:#333
     classDef primary fill:#1168bd,color:#fff,stroke:#0b4f9e
     classDef standard fill:#3a7bd5,color:#fff,stroke:#245fa8
-    class admin,mgr,eng,agent actor
-    class adminCases,mgrCases primary
-    class engCases,agentCases standard
+    class admin,manager,engineer,agent actor
+    class adminCases,managerCases primary
+    class engineerCases,agentCases standard
     style roles fill:#fff,stroke:#bbb,stroke-dasharray:5 5
     style system fill:#f8fbff,stroke:#1168bd,stroke-dasharray:5 5
 ```
 
-Hai tác nhân hệ thống — **ITSM** (UC10, đẩy ticket/change qua API) và **Bộ xử lý nền** (UC13, phát hiện bất thường) — không hiển thị ở sơ đồ trên. Chi tiết: [Tác nhân, vai trò và use case](docs/03-use-cases.md).
+Two system actors are not shown: the **ITSM system** (UC10, pushes tickets and changes through the API) and the **background processor** (UC13, detects anomalies and ranks suspects).
 
-### 1.5 Vai trò và quyền hạn
+For detailed actors, permissions, and business flows, see [Actors, roles, and use cases](docs/03-use-cases.md).
 
-| Chức năng | Admin | IT Manager | Change Engineer | Agent |
-|---|---|---|---|---|
-| Xem dashboard, anomaly, nghi phạm | Có | Có | Có | Có |
-| Xem change và ticket | Có | Có | Có | Có |
-| Tạo change | Có | Có | Có | Không |
-| Sửa change | Có | Có | Chỉ change của mình | Không |
-| Tạo / import ticket | Có | Có | Không | Có |
-| Xem / tính lại baseline | Có | Có | Chỉ xem | Chỉ xem |
-| Phản hồi nghi phạm | Có | Có | Có | Có |
-| Nhật ký hoạt động | Có | Có | Không | Không |
-| Cấu hình hệ thống | Có | Không | Không | Không |
-| Quản lý người dùng | Có | Không | Không | Không |
+### 1.4 Roles and permissions
 
-Backend phải thực thi RBAC và chính sách "chỉ change của mình"; việc ẩn nút ở frontend chỉ phục vụ UI/UX.
+| Capability                       | Admin | IT Manager | Change Engineer   | Agent     |
+| -------------------------------- | ----- | ---------- | ----------------- | --------- |
+| View dashboard, anomalies, suspects | Yes | Yes        | Yes               | Yes       |
+| View changes and tickets         | Yes   | Yes        | Yes               | Yes       |
+| Create changes                   | Yes   | Yes        | Yes               | No        |
+| Edit changes                     | Yes   | Yes        | Own records only  | No        |
+| Create / import tickets          | Yes   | Yes        | No                | Yes       |
+| View baseline                    | Yes   | Yes        | Yes               | Yes       |
+| Recompute baseline               | Yes   | Yes        | No                | No        |
+| Give suspect feedback            | Yes   | Yes        | Yes               | Yes       |
+| Audit log                        | Yes   | Yes        | No                | No        |
+| System configuration             | Yes   | No         | No                | No        |
+| User management                  | Yes   | No         | No                | No        |
 
-## 2. Kiến trúc thông tin (Information Architecture)
+The backend must enforce RBAC and the own-record policy; hiding frontend controls serves UI/UX only.
 
-Không gian làm việc sau đăng nhập được tổ chức theo năng lực nghiệp vụ. Điều hướng tuân theo ma trận vai trò; mục không đủ quyền không hiển thị.
+## 2. Information Architecture, Screen Hierarchy, and UI/UX
 
-### 2.1 Cây thông tin
+The information architecture organizes the authenticated workspace by business capability. Screen permissions and navigation follow the role matrix, while loading, empty, validation, error, saving, and success states are defined consistently.
+
+### 2.1 Information architecture
 
 ```text
-Công khai
-└── Đăng nhập
+Public
+└── Login
 
-Sau đăng nhập
-├── Dashboard sự cố
-├── Anomaly (danh sách, chi tiết + nghi phạm xếp hạng)
-├── Change
-├── Ticket (gồm Import)
+Authenticated
+├── Dashboard
+├── Anomalies
+├── Changes
+├── Tickets
 ├── Baseline
-├── Nhật ký hoạt động
-├── Cấu hình
-├── Người dùng
-├── Hồ sơ cá nhân
-└── 403 Không đủ quyền
+├── Audit
+├── Settings
+├── Users
+├── Profile
+└── Forbidden
 ```
 
-### 2.2 Phân cấp màn hình
+### 2.2 Screen hierarchy
+
+Login leads to the authenticated shell. The shell owns navigation to feature pages; change, ticket, and user create/edit interactions use feature-owned modals. The anomaly detail page links to the suspect change detail. Unauthorized navigation resolves to the Forbidden screen.
 
 ```mermaid
 flowchart TB
-    Login["Đăng nhập"] --> Shell["Shell (sidebar + topbar)"]
-    Shell --> Dash["Dashboard sự cố"]
-    Shell --> Anom["Danh sách anomaly"]
-    Anom --> AnomDetail["Chi tiết anomaly + nghi phạm"]
-    Dash --> AnomDetail
-    Shell --> Chg["Danh sách change"]
-    Chg --> ChgForm["Modal thêm / sửa"]
-    Chg --> ChgDetail["Modal chi tiết"]
-    AnomDetail --> ChgDetail
-    Shell --> Tkt["Danh sách ticket"]
-    Tkt --> Imp["Import ticket"]
-    Shell --> Base["Baseline"]
-    Shell --> Audit["Nhật ký hoạt động"]
-    Shell --> Cfg["Cấu hình"]
-    Shell --> Users["Người dùng"]
-    Shell --> Profile["Hồ sơ cá nhân"]
-    Shell --> Forbidden["403"]
+    Login["Login"] --> Shell["Authenticated shell"]
+    Shell --> Dashboard["Dashboard"]
+    Shell --> Anomalies["Anomaly list"]
+    Anomalies --> AnomalyDetail["Anomaly detail and ranked suspects"]
+    Dashboard --> AnomalyDetail
+    Shell --> Changes["Change list"]
+    Changes --> ChangeForm["Add or edit change modal"]
+    Changes --> ChangeDetail["Change detail modal"]
+    AnomalyDetail --> ChangeDetail
+    Shell --> Tickets["Ticket list"]
+    Tickets --> Import["Ticket import"]
+    Shell --> Baseline["Baseline"]
+    Shell --> Audit["Audit log"]
+    Shell --> Settings["Settings"]
+    Shell --> Users["User management"]
+    Users --> UserForm["Add or edit user modal"]
+    Shell --> Profile["Profile"]
+    Shell --> Forbidden["403 Forbidden"]
 ```
 
-Shell sở hữu điều hướng tới các trang tính năng; thao tác tạo/sửa change, ticket, người dùng dùng modal thuộc tính năng đó. Điều hướng trái quyền dẫn tới màn hình 403.
+Detailed screen IDs, user flows, screen states, accessibility rules, and use-case mappings are maintained in [Information Architecture](docs/04-information-architecture.md).
 
-Mã màn hình, luồng tác vụ, trạng thái UI, quy tắc truy cập và ánh xạ use case — màn hình: [Kiến trúc thông tin](docs/04-information-architecture.md).
+### 2.3 Current UI prototype
 
-## Tài liệu
+No UI prototype exists yet. Screens will be designed from the [screen inventory](docs/04-information-architecture.md#3-screen-inventory) in a later phase.
 
-| Tài liệu | Nội dung |
-|---|---|
-| [docs/01-scope.md](docs/01-scope.md) | Bài toán, mục tiêu, dữ liệu đầu vào, ngoài phạm vi |
-| [docs/02-features.md](docs/02-features.md) | Danh mục tính năng F01–F11 |
-| [docs/03-use-cases.md](docs/03-use-cases.md) | Tác nhân, use case, phân quyền, user story |
-| [docs/04-information-architecture.md](docs/04-information-architecture.md) | Cây thông tin, màn hình, trạng thái UI |
+## Documentation
 
-## Tiến độ
+- Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
+- Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
+- UI/UX: [Information architecture](docs/04-information-architecture.md).
 
-- [x] Phạm vi, tính năng, use case, user story
-- [x] Kiến trúc thông tin
-- [ ] Mô hình dữ liệu và ERD
-- [ ] Thiết kế thuật toán baseline, phát hiện bất thường, xếp hạng
-- [ ] Kiến trúc C4, API (OpenAPI)
-- [ ] Triển khai
+## Project Progress
+
+- [x] Define scope, goals, and user roles
+- [x] Write the feature list and use cases
+- [x] Write user stories following INVEST
+- [x] Design the information architecture and screen permissions
+- [x] Design the screen hierarchy, task flows, and UI states
+- [ ] Write acceptance criteria and business rules
+- [ ] Write non-functional requirements
+- [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
+- [ ] Design the C4 System Context, Container, and Component views
+- [ ] Design the database schema and data relationships
+- [ ] Write the API documentation in OpenAPI 3.0
+- [ ] Design class diagrams and sequence diagrams
+- [ ] Build the UI prototype for each role
+- [ ] Build the backend and connect the frontend to the API

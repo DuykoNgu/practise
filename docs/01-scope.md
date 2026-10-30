@@ -1,74 +1,91 @@
-# 01. Phạm vi (Scope) V1
+# Scope V1
 
-> Trạng thái thiết kế: TARGET V1 · Trạng thái triển khai: CHƯA TRIỂN KHAI (giai đoạn tài liệu)
+> Design status: TARGET V1
+>
+> Implementation status: NOT STARTED (documentation phase)
 
-Tên sản phẩm: **Change-Incident Correlation (CIC)** — Hệ thống truy vết sự cố do thay đổi.
+Product name: **Change-Incident Correlation (CIC)**.
 
-## 1. Bài toán
+## Problem
 
-Khi số ticket tăng bất thường, hệ thống tự trả lời câu hỏi **"thay đổi nào gần đây có khả năng là nguyên nhân?"** và xếp hạng các "nghi phạm".
+When tickets rise abnormally, the IT team needs to answer quickly: **which recent change is the likely cause?**
 
-Ví dụ thực tế: 22h thứ Ba, IT cập nhật bản vá Windows cho phòng Kế toán. Sáng thứ Tư có 14 ticket "không in được". Hiện nay chỉ người giàu kinh nghiệm mới nối được hai sự việc này; người trực service desk thường xử lý từng ticket riêng lẻ, mất nhiều giờ mới nhận ra đây là một sự cố chung.
+Real example: on Tuesday at 22:00 IT applies a Windows patch to the Accounting department. On Wednesday morning there are 14 "cannot print" tickets. Today only an experienced person can connect the two events; service desk agents usually handle each ticket on its own and may need hours to realize it is one shared incident.
 
-## 2. Mục tiêu V1
+A good solution needs a simple place to:
 
-- Ghi nhận **Change record** (bản vá, đổi cấu hình, nâng cấp phần mềm) cùng phạm vi ảnh hưởng và kế hoạch rollback.
-- Tiếp nhận **Ticket** (thủ công, import CSV/Excel, hoặc API từ hệ thống ITSM).
-- Xây dựng **Baseline**: số ticket trung bình theo khung giờ / thứ / danh mục.
-- **Phát hiện bất thường** khi số ticket của một nhóm (danh mục, phòng ban, chi nhánh, phần mềm) vượt baseline.
-- **Xếp hạng nghi phạm**: với mỗi bất thường, liệt kê các change gần đây theo điểm khả nghi (0–100) kèm lý do giải thích được.
-- Hỗ trợ quyết định: hiển thị ticket liên quan, kế hoạch rollback, người thực hiện change.
-- Thu thập **phản hồi** (nghi phạm đúng/sai) để cải thiện độ chính xác.
-- Phân quyền theo vai trò và ghi nhật ký hoạt động.
+- record changes with their scope and rollback plan;
+- receive tickets from several sources;
+- know the normal ticket volume (baseline);
+- detect when volume is abnormal;
+- rank recent changes as suspects, with reasons the user can verify.
 
-## 3. Dữ liệu đầu vào
+This is not an ITSM replacement, not a CMDB, and not a root-cause analysis tool.
 
-### 3.1 Change record
+## Input data
 
-| Trường | Mô tả |
+### Change record
+
+| Field | Description |
 |---|---|
-| Loại thay đổi | Bản vá (patch) · Đổi cấu hình (config) · Nâng cấp phần mềm (upgrade) |
-| Thời điểm | Bắt đầu / kết thúc thực hiện (có múi giờ) |
-| Phạm vi ảnh hưởng | Nhóm máy · Phòng ban · Phần mềm · Chi nhánh (một hoặc nhiều) |
-| Người thực hiện | Tài khoản IT thực hiện và người phê duyệt |
-| Kế hoạch rollback | Có / không, mô tả các bước, thời gian ước tính, mức rủi ro |
-| Trạng thái | Đã lên lịch · Đang thực hiện · Hoàn tất · Đã rollback · Thất bại |
+| Type | Patch · configuration change · software upgrade |
+| Time | Start and end of execution (with time zone) |
+| Scope | Device group, department, software, branch (one or more) |
+| Implementer | IT account that performed the change, and the approver |
+| Rollback plan | Available or not, steps, estimated duration, risk level |
+| Status | Scheduled · In progress · Completed · Rolled back · Failed |
 
-### 3.2 Ticket
+### Ticket
 
-| Trường | Mô tả |
+| Field | Description |
 |---|---|
-| Thời điểm tạo | Thời điểm người dùng báo sự cố |
-| Danh mục | Ví dụ: In ấn, Mạng, Email, Phần mềm kế toán, Đăng nhập |
-| Người báo | Phòng ban, chi nhánh của người báo |
-| Thiết bị / phần mềm liên quan | Nhóm máy, tên phần mềm, phiên bản |
-| Mô tả | Văn bản tự do (dùng cho khớp từ khóa với change) |
-| Trạng thái | Mới · Đang xử lý · Đã giải quyết · Đóng |
+| Created time | When the user reported the problem |
+| Category | For example: Printing, Network, Email, Accounting software, Login |
+| Reporter | Department and branch of the reporter |
+| Related device / software | Device group, software name, version |
+| Description | Free text, used for keyword matching against changes |
+| Status | New · In progress · Resolved · Closed |
 
-### 3.3 Baseline
+### Baseline
 
-Số ticket trung bình (và độ lệch chuẩn) theo **khung giờ × thứ trong tuần × danh mục**, tính từ lịch sử ticket (mặc định 8 tuần gần nhất, loại bỏ các giai đoạn đã được đánh dấu là sự cố).
+Average ticket count (and standard deviation) per **hour slot × weekday × category**, computed from ticket history (default: last 8 weeks, excluding periods already marked as incidents).
 
-## 4. Ngoài phạm vi (Non-goals)
+## Target V1 goals
 
-V1 **không** bao gồm:
+The target V1 supports:
 
-- Tự động thực thi rollback hoặc thay đổi trên hạ tầng thật.
-- Thay thế hệ thống ITSM/CMDB; CIC chỉ đọc và đối chiếu dữ liệu.
-- Phân tích nguyên nhân gốc rễ (root cause) ở mức log/hệ thống.
-- Dự đoán sự cố trước khi change được thực hiện.
-- Chatbot hoặc xử lý ngôn ngữ tự nhiên nâng cao (chỉ khớp từ khóa/danh mục cơ bản).
-- SSO bên ngoài và xác thực đa yếu tố.
+- Login through the REST API with backend authentication and authorization.
+- Change management (list, add/edit modal, detail modal, status updates).
+- Ticket management with manual entry, CSV/Excel import (preview and validation), and API ingestion from an ITSM system.
+- Baseline calculation and comparison with actual volume.
+- Anomaly detection per category, department, branch, and software.
+- Ranked suspect changes with an explainable score (0–100).
+- Suspect feedback (correct cause / unrelated) to measure and tune accuracy.
+- Persisted audit log.
+- System configuration (thresholds, tracing window, ranking weights).
+- User management (Admin) and personal profile.
+- Backend-enforced roles and permissions.
 
-## 5. Kiến trúc mục tiêu (mức ý tưởng)
+## Non-goals
+
+V1 does **not** include:
+
+- Automatic execution of rollback or any change on real infrastructure.
+- Replacing the ITSM or CMDB; CIC reads and correlates data only.
+- Root-cause analysis at log or system level.
+- Predicting incidents before a change is applied.
+- Chatbot features or advanced natural-language processing (basic category/keyword matching only).
+- External identity providers and multi-factor authentication.
+
+## Target V1 architecture
 
 ```text
-Giao diện web (SPA)
-    → REST / HTTPS / JSON
-Backend API (nhiều tầng)
-    → Cơ sở dữ liệu quan hệ (change, ticket, baseline, kết quả tương quan)
-    → Bộ xử lý nền (tính baseline, phát hiện bất thường, xếp hạng)
-    → Lưu trữ tệp (file import)
+Web frontend (SPA)
+    → REST/HTTPS/JSON
+Multi-tier backend API
+    → Relational database (changes, tickets, baselines, correlation results)
+    → Background processor (baseline, anomaly detection, ranking)
+    → File storage for imports
 ```
 
-Chi tiết kiến trúc (C4, ERD, API) thuộc các giai đoạn sau và nằm ngoài tài liệu này.
+This is an idea-level view. Detailed architecture (C4, data model, API) is defined in later phases.
