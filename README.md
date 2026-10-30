@@ -103,6 +103,20 @@ For detailed actors, permissions, and business flows, see [Actors, roles, and us
 
 The backend must enforce RBAC and the own-record policy; hiding frontend controls serves UI/UX only.
 
+### 1.5 Acceptance criteria, business rules, and non-functional requirements
+
+Every use case has observable acceptance criteria (`AC-UC01`–`AC-UC23`), written to become API and UI tests. Business rules (`BR-001`–`BR-021`) fix the decisions the code must follow, and non-functional requirements set measurable targets.
+
+| Area | Key rules and targets |
+|---|---|
+| Detection | Anomaly when count > mean + 3 × std dev (configurable); detected within 2 intervals (default 30 min) |
+| Ranking | Changes started within 48 h before the spike (not `SCHEDULED`); score 0–100 from five weighted factors; High ≥ 70, Medium ≥ 40 |
+| AI suggestion | Every cause cites evidence; Flexible (LLM-knowledge) steps keep the label Hypothesis; LLM failure never changes the ranking |
+| Security & privacy | JWT 30 min; 5 failed logins / 15 min → `429`; logs masked before storage and before the LLM; secrets never logged |
+| Performance | Reads P95 ≤ 500 ms; writes ≤ 800 ms; dashboard and anomaly detail ≤ 2 s; 50 concurrent users |
+
+Details: [Acceptance Criteria](docs/08-acceptance-criteria.md), [Business Rules](docs/requirements/business-rules.md), [Non-Functional Requirements](docs/requirements/non-functional-requirements.md).
+
 ## 2. Information Architecture, Screen Hierarchy, and UI/UX
 
 The information architecture organizes the authenticated workspace by business capability. Screen permissions and navigation follow the role matrix, while loading, empty, validation, error, saving, and success states are defined consistently.
@@ -422,6 +436,149 @@ flowchart TB
     style validator fill:#0b4f9e,color:#fff
     style persistence fill:#1168bd,color:#fff
 ```
+
+### AI pipeline and knowledge graph
+
+How the AI part goes from input to output. Detection and ranking are rule-based; the LLM only reasons over evidence retrieved from the knowledge graph, and every cause it states must cite that evidence.
+
+```mermaid
+flowchart TB
+    subgraph IN["① Input"]
+        direction LR
+        logsIn["Error logs<br/><i>Log Source → POST /integration/logs</i>"]
+        ticketsIn["Tickets<br/><i>manual · import · ITSM</i>"]
+        changesIn["Change records<br/><i>scope · implementer · rollback plan</i>"]
+    end
+
+    subgraph PREP["② Extract & classify"]
+        direction LR
+        mask["Masking<br/>names · e-mail · IP · paths → ***"]
+        classify["Classification<br/>signature (SHA-256 of normalized message)<br/>category · level"]
+        mapScope["Scope mapping<br/>device group → department, branch"]
+    end
+
+    subgraph DETECT["③ Detect & rank"]
+        direction LR
+        baseline["Baseline<br/>mean, std dev per<br/>category × weekday × hour"]
+        anomaly["Anomaly detection (rules)<br/>count > mean + 3 × std dev"]
+        rank["Suspect ranking (rules, no LLM)<br/>5 factors × weights → score 0–100"]
+    end
+
+    KG[("④ Knowledge graph<br/>changes · tickets · logs · scope ·<br/>anomalies · suspects ·<br/>confirmed incidents · guidelines")]
+
+    subgraph RETRIEVE["⑤ Graph retrieval"]
+        direction LR
+        traverse["Traverse from the suspect:<br/>change → scope → tickets / logs<br/>anomaly → similar past anomalies<br/>→ confirmed resolutions · guidelines"]
+        bundle["Evidence bundle<br/>every item has an id"]
+    end
+
+    subgraph REASON["⑥ LLM reasoning engine"]
+        direction LR
+        prompt["Prompt builder<br/>masked evidence + ids<br/>+ instructions to cite ids"]
+        llm["LLM<br/>drafts likely cause<br/>and resolution steps"]
+    end
+
+    subgraph VALIDATE["⑦ Solution validation"]
+        direction LR
+        checkCause["Each cause cites a<br/>valid evidence id?<br/>no → remove"]
+        checkStep["Each step cites rollback plan,<br/>past incident, or guideline?<br/>yes → Standard · no → Flexible"]
+    end
+
+    subgraph OUT["⑧ Output"]
+        direction LR
+        verified["Verified solution<br/><b>Standard</b> steps with sources<br/>label CONFIRMED after a person confirms"]
+        hypothesis["New hypothesis<br/><b>Flexible</b> steps (LLM knowledge)<br/>always label HYPOTHESIS"]
+        nosupport["No supported suggestion<br/>no cause with evidence"]
+    end
+
+    subgraph FB["⑨ Review & feedback"]
+        direction LR
+        screen["Anomaly detail screen<br/>suspects · evidence · labels"]
+        decide["Suspect feedback<br/>+ confirm / reject suggestion"]
+    end
+
+    logsIn --> mask --> classify --> mapScope
+    ticketsIn --> mapScope
+    changesIn --> KG
+    mapScope --> KG
+    KG --> baseline --> anomaly --> rank
+    rank -->|"suspects stored first"| KG
+    rank --> traverse
+    KG --> traverse --> bundle --> prompt --> llm
+    llm --> checkCause --> checkStep
+    checkStep --> verified
+    checkStep --> hypothesis
+    checkCause --> nosupport
+    verified --> screen
+    hypothesis --> screen
+    nosupport --> screen
+    screen --> decide
+    decide -->|"confirmed resolution becomes<br/>PAST_INCIDENT knowledge"| KG
+
+    style KG fill:#0b4f9e,color:#fff
+    style llm fill:#7b3fbf,color:#fff
+    style rank fill:#1168bd,color:#fff
+    style anomaly fill:#1168bd,color:#fff
+    style checkCause fill:#2e7d32,color:#fff
+    style checkStep fill:#2e7d32,color:#fff
+    style verified fill:#2e7d32,color:#fff
+    style hypothesis fill:#f9a825,color:#000
+    style nosupport fill:#9e9e9e,color:#fff
+```
+
+The knowledge graph links every entity CIC knows. In V1 it is stored in PostgreSQL (rows are nodes, foreign keys and link tables are edges) and traversed with SQL joins; confirmed resolutions flow back into it as past incidents.
+
+```mermaid
+flowchart LR
+    CH(["Change"])
+    TK(["Ticket"])
+    LG(["Error log"])
+    AN(["Anomaly"])
+    SP(["Suspect"])
+    SG(["Confirmed resolution<br/><i>past incident</i>"])
+    GL(["Guideline"])
+    RB(["Rollback plan"])
+    DEP(["Department"])
+    BR(["Branch"])
+    SW(["Software"])
+    DG(["Device group"])
+    CAT(["Category"])
+    US(["User"])
+
+    CH -- "AFFECTS" --> DEP
+    CH -- "AFFECTS" --> BR
+    CH -- "AFFECTS" --> SW
+    CH -- "AFFECTS" --> DG
+    CH -- "HAS_PLAN" --> RB
+    US -- "IMPLEMENTED" --> CH
+    TK -- "REPORTED_FROM" --> DEP
+    TK -- "REPORTED_FROM" --> BR
+    TK -- "ABOUT" --> SW
+    TK -- "IN_CATEGORY" --> CAT
+    LG -- "EMITTED_BY" --> DG
+    LG -- "EMITTED_BY" --> SW
+    LG -- "IN_CATEGORY" --> CAT
+    DG -- "BELONGS_TO" --> DEP
+    TK -- "PART_OF" --> AN
+    LG -- "PART_OF" --> AN
+    AN -- "IN_GROUP" --> CAT
+    CH -- "SUSPECTED_IN" --> SP
+    SP -- "FOR" --> AN
+    SP -- "RESOLVED_BY" --> SG
+    SG -- "CITES" --> LG
+    SG -- "CITES" --> RB
+    GL -- "APPLIES_TO" --> CAT
+    GL -- "APPLIES_TO" --> SW
+
+    style CH fill:#1168bd,color:#fff
+    style AN fill:#1168bd,color:#fff
+    style SP fill:#0b4f9e,color:#fff
+    style SG fill:#2e7d32,color:#fff
+    style GL fill:#2e7d32,color:#fff
+    style RB fill:#2e7d32,color:#fff
+```
+
+Retrieval paths, node/edge-to-table mapping, and the printer walkthrough: [AI Pipeline and Knowledge Graph](docs/architecture/ai-pipeline.md).
 
 Complete documentation: [C4 Architecture](docs/architecture/c4/README.md).
 
@@ -1010,10 +1167,11 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 
 ## Documentation
 
-- Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
+- Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md), [Acceptance criteria](docs/08-acceptance-criteria.md).
+- Requirements catalogs: [Business rules](docs/requirements/business-rules.md) and [Non-functional requirements](docs/requirements/non-functional-requirements.md).
 - Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
-- Architecture: [C4 model](docs/architecture/c4/README.md).
+- Architecture: [C4 model](docs/architecture/c4/README.md), [AI pipeline and knowledge graph](docs/architecture/ai-pipeline.md).
 - Folder structure: [Next.js and FastAPI modules](docs/07-folder-structure.md).
 - Code-level design: [C4 Level 4](docs/architecture/c4/04-code.md), [class diagrams](docs/architecture/uml/01-class-diagrams.md), [sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
@@ -1027,8 +1185,8 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 - [x] Write user stories following INVEST
 - [x] Design the information architecture and screen permissions
 - [x] Design the screen hierarchy, task flows, and UI states
-- [ ] Write acceptance criteria and business rules
-- [ ] Write non-functional requirements
+- [x] Write acceptance criteria and business rules
+- [x] Write non-functional requirements
 - [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
 - [x] Design the C4 System Context, Container, and Component views
 - [x] Design the database schema and data relationships

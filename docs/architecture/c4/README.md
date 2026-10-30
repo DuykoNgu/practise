@@ -26,6 +26,8 @@ flowchart LR
 | C3 | [Component](03-component.md) | Components inside the Backend API and the Analysis Worker |
 | C4 | [Code — two core features](04-code.md) | Python classes for Suspect Ranking and Suggested Resolution |
 
+The AI flow from input to output and the knowledge graph are described in [AI Pipeline and Knowledge Graph](../ai-pipeline.md).
+
 ## Implementation Status
 
 No container is implemented yet. The diagrams describe the **target architecture**; the technologies in C2 are proposals.

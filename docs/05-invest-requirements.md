@@ -13,7 +13,7 @@ Each requirement is small enough to implement and test independently. Cross-cutt
 | Valuable | Every story names the user benefit. |
 | Estimable | Inputs, outputs, roles, and exceptional outcomes are explicit. |
 | Small | Each story targets one capability and can be split into API, application, persistence, and UI tasks. |
-| Testable | Every story has an observable outcome; detailed acceptance criteria are written in a later phase. |
+| Testable | Every story links to observable acceptance criteria in [08-acceptance-criteria.md](08-acceptance-criteria.md) (`AC-UC` of its use case). |
 
 ## Product backlog
 
