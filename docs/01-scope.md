@@ -79,13 +79,19 @@ V1 does **not** include:
 
 ## Target V1 architecture
 
-```text
-Web frontend (SPA)
-    → REST/HTTPS/JSON
-Multi-tier backend API
-    → Relational database (changes, tickets, baselines, correlation results)
-    → Background processor (baseline, anomaly detection, ranking)
-    → File storage for imports
+```mermaid
+flowchart LR
+    frontend["Web frontend<br/>(SPA)"]
+    api["Multi-tier backend API"]
+    database[("Relational database<br/>Changes · tickets · baselines<br/>Correlation results")]
+    processor["Background processor<br/>Baseline · anomaly detection · ranking"]
+    storage[("File storage<br/>Imports")]
+
+    frontend -->|"REST / HTTPS / JSON"| api
+    api --> database
+    api --> processor
+    api --> storage
+    processor <-->|"Read and write"| database
 ```
 
 This is an idea-level view. Detailed architecture (C4, data model, API) is defined in later phases.
