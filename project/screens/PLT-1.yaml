@@ -5,7 +5,7 @@ track: main
 milestone: M0
 order: 1
 depends_on: []
-status: todo
+status: done
 roles: {}
 stories: []
 acceptance: []
@@ -25,6 +25,7 @@ backend:
     - app/core/config.py
     - app/core/database.py
     - app/core/errors.py
+    - app/core/logging.py
     - app/core/security.py
     - app/core/deps.py
     - app/core/container.py
@@ -34,18 +35,26 @@ backend:
   jobs: []
 tasks:
   backend:
-    - "[ ] FastAPI app with api_router mounted at /api/v1"
-    - "[ ] Settings from .env with pydantic-settings"
-    - "[ ] SQLAlchemy 2 engine and session using DATABASE_SCHEMA"
-    - "[ ] Domain errors mapped to problem+json with trace id, no stack traces"
-    - "[ ] JWT encode/decode (30 min), Argon2 hashing, API-key hashing"
-    - "[ ] Dependencies: session, current user, role check, API client"
-    - "[ ] Composition root in core/container.py"
-    - "[ ] Structured JSON logs with trace id; secrets never logged"
-    - "[ ] GET /health at the root: status, database, workerLastJobAt; 503 when the database is down"
+    - "[x] FastAPI app with api_router mounted at /api/v1"
+    - "[x] Settings from .env with pydantic-settings"
+    - "[x] SQLAlchemy 2 engine and session using DATABASE_SCHEMA"
+    - "[x] Domain errors mapped to problem+json with trace id, no stack traces"
+    - "[x] JWT encode/decode (30 min), Argon2 hashing, API-key hashing"
+    - "[x] Dependencies: session, current user, role check, API client"
+    - "[x] Composition root in core/container.py"
+    - "[x] Structured JSON logs with trace id; secrets never logged"
+    - "[x] GET /health at the root: status, database, workerLastJobAt; 503 when the database is down"
   tests:
-    - "[ ] Error mapping, JWT expiry, hashing, role-check dependency"
+    - "[x] Error mapping, JWT expiry, hashing, role-check dependency"
 done_when:
   - API starts, health returns OK, ruff, mypy and pytest pass
-skills_used: []
+skills_used:
+  - backend-design:think-before-coding
+  - backend-design:error-handling-as-design
+  - backend-design:security-discipline
+  - backend-design:auth-and-authorization
+  - backend-design:query-discipline
+  - backend-design:testing-with-discernment
+  - simplify
+  - code-review
 open: []

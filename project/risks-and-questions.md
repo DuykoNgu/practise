@@ -30,6 +30,7 @@
 | I-04 | IA routes vs [07-folder-structure.md](../docs/07-folder-structure.md) | IA uses route `/403`; folder structure uses `app/forbidden/`. | Pick one before SCR-90. |
 | I-05 | `CLAUDE.md` screen table | SCR-31 lists backend module `jobs`, but NFR-IMPORT-001 makes import synchronous. | Resolved by D-020: [SCR-31.yaml](screens/SCR-31.yaml) lists only `tickets` and `audit`. |
 | I-06 | [cic.sql](../src/database/cic.sql) `job_type` | BR-018 needs a scheduled log-retention cleanup, but `job_type` has no value for it. | Add a job type or run cleanup inside another job; decide before API-LOGS. |
+| I-07 | [cic.sql](../src/database/cic.sql) `jobs` | `GET /health` reads `max(finished_at)` from `jobs`, which has no index on `finished_at`; polled often, this becomes a sequential scan as `jobs` grows. | Add an index on `jobs (finished_at)` or a retention rule for finished jobs; decide with the jobs module (JOB-DETECT). |
 
 ## Risks
 

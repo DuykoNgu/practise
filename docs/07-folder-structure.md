@@ -102,6 +102,7 @@ src/backend/
 │   │   ├── security.py           # JWT, password hashing, API-key hashing
 │   │   ├── container.py          # Composition root: binds interfaces to implementations
 │   │   ├── deps.py               # Depends(): session, current user, role checks
+│   │   ├── logging.py            # JSON logs with trace id, request log middleware
 │   │   └── errors.py             # Errors → problem+json
 │   ├── modules/
 │   │   ├── auth/
