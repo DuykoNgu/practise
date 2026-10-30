@@ -10,43 +10,7 @@ Requirements define what CIC must do, who uses it, the value delivered, and the 
 
 ### 1.1 Product mind map
 
-```mermaid
-mindmap
-  root((CIC))
-    Inputs
-      Change records
-        Type: patch, config, upgrade
-        Time
-        Scope: device group, department, software, branch
-        Implementer
-        Rollback plan
-      Tickets
-        Time
-        Category
-        Reporter department and branch
-        Device or software
-        Description
-      Baseline
-        Average tickets per hour, weekday, category
-    Detection
-      Anomaly detection
-      Baseline recompute
-    Correlation
-      Time proximity
-      Scope match
-      Category and keyword match
-      Anomaly magnitude
-      Change risk
-    Output
-      Ranked suspects with explanation
-      Related tickets and timeline
-      Rollback plan and implementer
-      Suspect feedback
-    Governance
-      Roles and permissions
-      Audit log
-      System configuration
-```
+![CIC mind map](docs/mindmap.png)
 
 ### 1.2 INVEST requirements
 
