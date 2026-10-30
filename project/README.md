@@ -16,6 +16,8 @@ This folder tracks **how** CIC V1 gets built. [screens/](screens/README.md) is t
 
 ## Run a work item
 
+Step-by-step guide (Vietnamese): [WORKFLOW.md](WORKFLOW.md).
+
 Use the project command in Claude Code:
 
 ```text
