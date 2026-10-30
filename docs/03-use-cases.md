@@ -20,7 +20,8 @@ System actors:
 | Actor | Description |
 |---|---|
 | ITSM system | Pushes tickets and changes through the API. |
-| Background processor | Computes baselines, detects anomalies, ranks suspects. |
+| Log source | Pushes error logs through the API. |
+| Background processor | Computes baselines, detects anomalies, ranks suspects, analyzes related logs, drafts suggested resolutions. |
 
 ## Role × feature matrix
 
@@ -29,6 +30,7 @@ System actors:
 | Dashboard | ✓ | ✓ | ✓ | ✓ |
 | View anomalies and suspects | ✓ | ✓ | ✓ | ✓ |
 | Give suspect feedback | ✓ | ✓ | ✓ | ✓ |
+| View related error logs | ✓ | ✓ | ✓ | ✓ |
 | View suggested resolution | ✓ | ✓ | ✓ | ✓ |
 | Confirm / reject suggested resolution | ✓ | ✓ | ✓ | |
 | View changes | ✓ | ✓ | ✓ | ✓ |
@@ -61,9 +63,11 @@ Menus / buttons are **not displayed** when the user lacks permission. Unauthoriz
 | UC10 | Receive tickets/changes through the API | ITSM system |
 | UC11 | View baseline | All users |
 | UC12 | Recompute baseline | IT Manager, Admin |
-| UC13 | Detect anomalies and rank suspects | Background processor |
+| UC13 | Detect anomalies, rank suspects, analyze related logs | Background processor |
 | UC14 | View anomaly detail and ranked suspects | All users |
 | UC15 | Give suspect feedback (correct cause / unrelated) | All users |
+| UC22 | Receive error logs through the API | Log source |
+| UC23 | View error logs related to an anomaly | All users |
 | UC20 | View suggested resolution of a suspect | All users |
 | UC21 | Confirm / reject suggested resolution | IT Manager, Change Engineer, Admin |
 | UC16 | View audit log | IT Manager, Admin |
@@ -80,19 +84,28 @@ The use case diagram is maintained in the [project README](../README.md#13-use-c
 | Item | Content |
 |---|---|
 | Precondition | The user is logged in and at least one anomaly exists. |
-| Main flow | 1. The user opens the dashboard and selects an anomaly. 2. The system shows the affected group, time range, and actual versus baseline tickets. 3. The system lists suspect changes by descending score, each with a per-factor explanation. 4. The user opens a suspect to see related tickets, implementer, rollback plan, and the suggested resolution (UC20). |
+| Main flow | 1. The user opens the dashboard and selects an anomaly. 2. The system shows the affected group, time range, and actual versus baseline tickets. 3. The system lists suspect changes by descending score, each with a per-factor explanation. 4. The user opens a suspect to see related tickets, implementer, rollback plan, and the related error logs (UC23), and the suggested resolution (UC20). |
 | Alternative flow | No change inside the tracing window → show "No suspect found" and suggest widening the window. |
 | Postcondition | No data is changed. |
+
+## Use case: UC22 / UC23 Error logs
+
+| Item | Content |
+|---|---|
+| Precondition | UC22: the log source holds a valid API key. UC23: the user is logged in and an anomaly exists. |
+| UC22 flow | 1. The log source pushes a batch of error logs. 2. The system validates it, masks sensitive data, normalizes and classifies each log, and stores it. 3. Logs already received (same `externalId`) are not stored twice. |
+| UC23 flow | 1. The user opens an anomaly. 2. The system lists the error logs linked to it (inside the tracing window and matching its scope), grouped by signature with counts. |
+| Alternative flow | No related logs → show "No related logs"; the analysis then relies on tickets and the change only. |
 
 ## Use case: UC20 / UC21 Suggested resolution
 
 | Item | Content |
 |---|---|
 | Precondition | A suspect exists for an anomaly. |
-| UC20 flow | 1. The user opens a suspect. 2. The system shows the likely cause and suggested resolution, each statement with its cited evidence, labeled **Confirmed** or **Hypothesis**. |
+| UC20 flow | 1. The user opens a suspect. 2. The system shows the likely cause, each statement citing its evidence (logs, tickets, change). 3. The system shows the resolution in two kinds: **Standard** (cites its source) and **Flexible** (LLM knowledge, always labeled **Hypothesis**). |
 | UC21 flow | 1. An IT Manager, Change Engineer, or Administrator marks the suggestion as confirmed or rejected, with a note. 2. The system stores the outcome; a confirmed suggestion becomes reusable evidence for later similar incidents. |
-| Alternative flow | No supporting evidence → show "No supported suggestion". Agents can view but cannot confirm. |
-| Rule | The system only suggests; it never executes a rollback or fix. |
+| Alternative flow | No evidence supports the cause → show "No supported suggestion". Agents can view but cannot confirm. |
+| Rule | The system only suggests; it never executes a rollback or fix. A flexible resolution is never shown as confirmed unless a person confirms it. |
 
 ## Business flow: from change to suspect
 
@@ -100,9 +113,12 @@ The use case diagram is maintained in the [project README](../README.md#13-use-c
 flowchart LR
     Change["Change recorded"] --> Window["Inside tracing window"]
     Tickets["Tickets arrive"] --> Detect["Volume exceeds baseline"]
+    Logs["Error logs arrive"] --> Link["Link logs by time and scope"]
     Detect --> Anomaly["Anomaly created"]
     Anomaly --> Rank["Score recent changes"]
     Window --> Rank
+    Anomaly --> Link
+    Link --> Suggest
     Rank --> Suspects["Ranked suspects with explanation"]
     Suspects --> Suggest["Suggested resolution with cited evidence"]
     Suggest --> Decide["User verifies, rolls back, confirms or rejects"]

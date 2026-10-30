@@ -46,6 +46,19 @@ This is not an ITSM replacement, not a CMDB, and not a root-cause analysis tool.
 | Description | Free text, used for keyword matching against changes |
 | Status | New · In progress · Resolved · Closed |
 
+### Error log
+
+| Field | Description |
+|---|---|
+| Occurred time | When the error happened (with time zone) |
+| Source | Service or software, device group |
+| Scope | Department and branch (mapped from the device or service) |
+| Level | Warning · Error · Critical |
+| Error code / message | Text of the error, masked before analysis |
+| Signature | Normalized form used to group identical errors |
+
+Sensitive data in logs (user names, e-mail addresses, IP addresses, file paths) is masked before a log is stored for analysis or sent to the LLM.
+
 ### Baseline
 
 Average ticket count (and standard deviation) per **hour slot × weekday × category**, computed from ticket history (default: last 8 weeks, excluding periods already marked as incidents).
@@ -60,10 +73,11 @@ The target V1 supports:
 - Baseline calculation and comparison with actual volume.
 - Anomaly detection per category, department, branch, and software.
 - Ranked suspect changes with an explainable score (0–100).
-- Suggested resolution for each suspect change, built from cited evidence (related tickets, rollback plan, previously confirmed incidents) and written by an LLM; every statement must cite its evidence, and a suggestion is marked *confirmed* or *hypothesis*.
+- Error log intake: receive error logs through the API, normalize them, mask sensitive data, classify the error, and link logs to anomalies and suspects by time and scope.
+- AI analysis and suggested resolution for each suspect change. The cause must cite evidence (related logs, tickets, change, rollback plan). The resolution has two kinds: **standard** (rollback plan, previously confirmed incidents, internal guidance) and **flexible** (the LLM's general knowledge). Flexible resolutions are always labeled *hypothesis*.
 - Suspect feedback (correct cause / unrelated) to measure and tune accuracy.
 - Persisted audit log.
-- System configuration (thresholds, tracing window, ranking weights).
+- System configuration (thresholds, tracing window, ranking weights, log retention).
 - User management (Admin) and personal profile.
 - Backend-enforced roles and permissions.
 
@@ -73,11 +87,11 @@ V1 does **not** include:
 
 - Automatic execution of rollback or any change on real infrastructure.
 - Replacing the ITSM or CMDB; CIC reads and correlates data only.
-- Root-cause analysis at log or system level.
+- Collecting logs from servers or devices (no agent or collector); CIC only receives logs pushed through the API.
+- A log-management platform: logs are kept for a configurable retention period and are not searchable as a general log store.
 - Predicting incidents before a change is applied.
 - Free-form chatbot or conversational assistant. The LLM only explains suspects and drafts suggested resolutions; it never computes the suspicion score.
-- Resolution suggestions that cannot cite evidence. The system suggests only; it never executes a resolution.
-- Ingesting raw application/error logs (tickets and change records remain the signals in V1).
+- Presenting an LLM-knowledge resolution as verified. It is always a hypothesis until a person with permission confirms it. The system suggests only; it never executes a resolution.
 - External identity providers and multi-factor authentication.
 
 ## Target V1 architecture
@@ -88,10 +102,12 @@ flowchart LR
     api["Multi-tier backend API"]
     database[("Relational database<br/>Changes · tickets · baselines<br/>Correlation results")]
     processor["Background processor<br/>Baseline · anomaly detection · ranking"]
-    llm["LLM service<br/>Explanation · suggested resolution<br/>Evidence validation"]
+    llm["LLM service<br/>Log analysis · suggested resolution<br/>Masking · evidence validation"]
     storage[("File storage<br/>Imports")]
+    logsrc["Log source<br/>(pushes error logs)"]
 
     frontend -->|"REST / HTTPS / JSON"| api
+    logsrc -->|"API key"| api
     api --> database
     api --> processor
     api --> storage

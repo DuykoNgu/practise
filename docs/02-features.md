@@ -18,6 +18,7 @@ UI product: **CIC**. Target V1 behavior is defined by the use cases, user storie
 | F10 | Audit Log | Yes | Should |
 | F11 | Users and Profile | Yes | Must |
 | F12 | Suggested Resolution | Yes | Should |
+| F13 | Error Log Analysis | Yes | Should |
 
 ## F01 Authentication and authorization
 
@@ -82,10 +83,25 @@ Administrators create, edit, and disable users and assign roles. Users update th
 
 For each suspect change, the system proposes a likely cause and a resolution. The suspicion score is still computed by rules and statistics (F06); the LLM only writes the explanation and the resolution.
 
-- F12.1 Collect evidence: related tickets and time window, scope match, the change's rollback plan, previously confirmed incidents with similar category and scope (from F08 feedback).
-- F12.2 Draft the suggestion with an LLM from that evidence only.
-- F12.3 Validate: every statement must cite its evidence (ticket IDs, change ID, time window); statements without evidence are removed.
-- F12.4 Label each suggestion: **Confirmed** (based on a previously confirmed incident) or **Hypothesis** (needs verification).
-- F12.5 Confirm or reject: only IT Manager, Change Engineer, and Administrator can mark a suggestion as confirmed; the outcome feeds F08.
+- F12.1 Collect evidence: related error logs (F13), related tickets and time window, scope match, the change's rollback plan, previously confirmed incidents with similar category and scope (from F08 feedback).
+- F12.2 Draft the suggestion with an LLM from that evidence.
+- F12.3 Validate the cause: every statement about the cause must cite its evidence (log IDs, ticket IDs, change ID, time window); statements without evidence are removed.
+- F12.4 Give the resolution in two kinds, each labeled with its **basis**:
+  - **Standard**: taken from the rollback plan, previously confirmed incidents, or internal guidance. It cites its source.
+  - **Flexible**: based on the LLM's general knowledge. It may have no source, so it is always labeled **Hypothesis**.
+- F12.5 Label each suggestion: **Confirmed** (all statements are standard and a person confirmed it) or **Hypothesis** (anything else).
+- F12.6 Confirm or reject: only IT Manager, Change Engineer, and Administrator can mark a suggestion as confirmed; the outcome feeds F08.
 
-The system only suggests. Rollback or any fix is performed by a person, never automatically. If no evidence supports a suggestion, the screen shows "No supported suggestion".
+The system only suggests. Rollback or any fix is performed by a person, never automatically. If no evidence supports the cause, the screen shows "No supported suggestion".
+
+## F13 Error Log Analysis
+
+Error logs give the AI technical evidence behind a spike of tickets.
+
+- F13.1 Receive error logs through the API (push by a log source) and normalize them: time, source, device group, department, branch, level, code, message.
+- F13.2 Mask sensitive data (user names, e-mail addresses, IP addresses, file paths) before storage for analysis and before any call to the LLM.
+- F13.3 Extract and classify: compute a signature, group identical errors, assign a category.
+- F13.4 Link logs to anomalies and suspects when they fall inside the tracing window and match the scope (department, branch, software, device group).
+- F13.5 Analyze: the LLM reads the linked logs, the tickets, and the suspect change to explain the likely cause (feeds F12).
+- F13.6 Show the related error logs on the anomaly detail screen.
+- F13.7 Keep logs for a configurable retention period, then delete them.

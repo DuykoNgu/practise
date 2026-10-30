@@ -33,8 +33,9 @@ flowchart TB
     A2 --> A3["Ranked suspects<br/>score + explanation"]
     A2 --> A4["Related tickets"]
     A2 --> A5["Timeline"]
+    A2 --> A8["Related error logs"]
     A2 --> A6["Suspect feedback"]
-    A2 --> A7["Suggested resolution<br/>evidence + confirm"]
+    A2 --> A7["Suggested resolution<br/>standard + hypothesis"]
 
     Records --> Chg["Changes"]
     Chg --> C1["Change list"]
@@ -71,7 +72,7 @@ flowchart TB
     class CIC root
     class Monitor,Records,Analysis,Admin,Utility group
     class Dash,Anom,Chg,Tkt,Base,Audit,Set,Usr,Prof page
-    class D1,D2,D3,A1,A2,A3,A4,A5,A6,A7,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
+    class D1,D2,D3,A1,A2,A3,A4,A5,A6,A7,A8,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
 ```
 
 **Navigation model.**
@@ -80,7 +81,7 @@ flowchart TB
 |---|---|---|
 | Global | Sidebar | The four groups and their level-2 pages; groups with no permitted page are hidden |
 | Utility | Topbar | Profile, time range / time zone, logout |
-| Local | Tabs inside a page | Anomaly detail (Suspects · Related tickets · Timeline), Settings, Profile |
+| Local | Tabs inside a page | Anomaly detail (Suspects · Related tickets · Related logs · Timeline), Settings, Profile |
 | Contextual | Links inside content | Suspect → change detail; change detail → anomalies it is suspected in; ticket → anomaly it belongs to |
 
 **Labeling.** Labels use the user's vocabulary and one term per concept: *Change* (never "modification"), *Ticket*, *Anomaly*, *Suspect*, *Baseline*. A suspect always shows its score as a number plus a High / Medium / Low label.
@@ -116,7 +117,7 @@ Unauthorized items are **not rendered** in the sidebar.
 | `SCR-01` | Login | Page | UC01, UC02 |
 | `SCR-02` | Dashboard | Page | UC03 |
 | `SCR-10` | Anomaly list | Page | UC14 |
-| `SCR-11` | Anomaly detail, suspects, and suggested resolution | Page | UC14, UC15, UC20, UC21 |
+| `SCR-11` | Anomaly detail, suspects, related logs, and suggested resolution | Page | UC14, UC15, UC20, UC21, UC23 |
 | `SCR-20` | Change list | Page | UC04 |
 | `SCR-21` | Change create / edit | Modal on change list | UC05, UC06 |
 | `SCR-22` | Change detail | Modal on change list | UC04 |
@@ -149,6 +150,8 @@ Unauthorized items are **not rendered** in the sidebar.
 | US14 | `SCR-11` submit suspect feedback |
 | US20 | `SCR-11` open a suspect to read the suggested resolution and its evidence |
 | US21 | `SCR-11` confirm or reject the suggested resolution |
+| US22 | No screen (API); logs appear on `SCR-11` |
+| US23 | `SCR-11` open the related-logs tab of an anomaly |
 | US15 | `SCR-50` filter and inspect audit events |
 | US16 | `SCR-60` edit thresholds, window, weights |
 | US17 | `SCR-70` list/create/edit/enable/disable users |
@@ -205,7 +208,9 @@ flowchart LR
 | Empty | Explain that no records match; distinguish an empty dataset from filtered-out results; show a permitted primary action. |
 | No suspect | Show "No suspect found" and suggest widening the tracing window. |
 | No supported suggestion | Show "No supported suggestion" when no evidence backs a resolution; never show uncited text. |
-| Suggestion label | Every suggestion shows **Confirmed** or **Hypothesis** and its cited evidence; the confirm action is hidden from roles that cannot confirm. |
+| No related logs | Show "No related logs" and explain that the analysis uses tickets and the change only. |
+| Suggestion label | Every suggestion shows **Confirmed** or **Hypothesis**, its basis (**Standard** or **Flexible**), and its cited evidence; Flexible resolutions are visually distinct and never shown as confirmed; the confirm action is hidden from roles that cannot confirm. |
+| Sensitive data | Masked values in logs are shown as masked; the original is never displayed. |
 | Validation error | Keep entered values, associate text with the invalid field, and focus the first error. |
 | API error | Show a concise message with a trace reference; do not expose technical details. |
 | Unauthorized | Clear invalid authentication and return to Login. |

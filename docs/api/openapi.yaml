@@ -6,8 +6,10 @@ info:
     REST contract for CIC V1. Design status: TARGET V1 (no implementation yet).
 
     The suspicion score of a suspect is computed by rules and statistics. The LLM only
-    explains suspects and drafts suggested resolutions; every statement must cite evidence.
-    The system only suggests; it never executes a rollback or fix.
+    explains suspects and drafts suggested resolutions. A statement about the cause must cite
+    evidence (logs, tickets, change). A resolution is either `STANDARD` (cites its source) or
+    `LLM_KNOWLEDGE` (always a hypothesis). The system only suggests; it never executes a
+    rollback or fix. Sensitive data in logs is masked before storage and before any LLM call.
 
     Roles: `ADMIN`, `IT_MANAGER`, `CHANGE_ENGINEER`, `AGENT`. Each operation lists its allowed
     roles in `x-roles`. The backend must enforce them; hiding controls in the UI is not enough.
@@ -160,6 +162,32 @@ paths:
               schema: { $ref: '#/components/schemas/TicketPage' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /anomalies/{anomalyId}/logs:
+    get:
+      tags: [Anomalies]
+      operationId: listAnomalyLogs
+      summary: Error logs related to an anomaly, grouped by signature (UC23)
+      description: Logs inside the tracing window that match the anomaly scope. Messages are masked.
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/AnomalyId' }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of log groups
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PageMeta' }
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/ErrorLogGroup' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /anomalies/{anomalyId}/timeline:
     get:
       tags: [Anomalies]
@@ -199,7 +227,7 @@ paths:
       tags: [Suggestions]
       operationId: getSuggestedResolution
       summary: Suggested cause and resolution of a suspect (UC20)
-      description: Returns 404 with problem type `no-supported-suggestion` when no evidence supports a suggestion.
+      description: Returns 404 with problem type `no-supported-suggestion` when no evidence supports the cause.
       x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
       parameters: [ { $ref: '#/components/parameters/SuspectId' } ]
       responses:
@@ -811,6 +839,35 @@ paths:
               schema: { $ref: '#/components/schemas/IngestResult' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /integration/logs:
+    post:
+      tags: [Integration]
+      operationId: ingestLogs
+      summary: Log source pushes error logs (UC22)
+      description: Sensitive data is masked, logs are normalized and classified, and the same `externalId` is not stored twice.
+      security:
+        - apiKeyAuth: []
+      x-roles: [LOG_SOURCE]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [logs]
+              properties:
+                logs:
+                  type: array
+                  maxItems: 1000
+                  items: { $ref: '#/components/schemas/ErrorLogIngest' }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 components:
   securitySchemes:
     bearerAuth:
@@ -1043,6 +1100,32 @@ components:
             properties:
               externalId: { type: string }
               reason: { type: string }
+    ErrorLogIngest:
+      type: object
+      required: [externalId, occurredAt, level, message]
+      properties:
+        externalId: { type: string, description: 'Idempotency key; the same id is not stored twice' }
+        occurredAt: { type: string, format: date-time }
+        software: { type: string }
+        deviceGroup: { type: string }
+        department: { type: string }
+        branch: { type: string }
+        level: { type: string, enum: [WARNING, ERROR, CRITICAL] }
+        code: { type: string }
+        message: { type: string, description: 'Raw message; masked on receipt' }
+    ErrorLogGroup:
+      type: object
+      required: [signature, count, level, firstSeen, lastSeen, sampleMessage]
+      properties:
+        signature: { type: string }
+        category: { type: string }
+        level: { type: string, enum: [WARNING, ERROR, CRITICAL] }
+        count: { type: integer }
+        firstSeen: { type: string, format: date-time }
+        lastSeen: { type: string, format: date-time }
+        sampleMessage: { type: string, description: 'Masked' }
+        software: { type: string }
+        deviceGroup: { type: string }
     ImportFile:
       type: object
       required: [file]
@@ -1134,17 +1217,23 @@ components:
       type: object
       required: [type, refId]
       properties:
-        type: { type: string, enum: [TICKET, CHANGE, PAST_INCIDENT, ROLLBACK_PLAN] }
+        type: { type: string, enum: [LOG, TICKET, CHANGE, PAST_INCIDENT, ROLLBACK_PLAN, GUIDELINE] }
         refId: { type: string }
         note: { type: string }
     Statement:
       type: object
-      required: [text, evidence]
+      required: [text, basis, evidence]
+      description: |
+        A statement about the cause must have at least one evidence item. A `STANDARD` resolution
+        step must cite its source. An `LLM_KNOWLEDGE` resolution step may have no evidence and is
+        always a hypothesis.
       properties:
         text: { type: string }
+        basis:
+          type: string
+          enum: [STANDARD, LLM_KNOWLEDGE]
         evidence:
           type: array
-          minItems: 1
           items: { $ref: '#/components/schemas/Evidence' }
     SuggestedResolution:
       type: object
@@ -1154,7 +1243,7 @@ components:
         label:
           type: string
           enum: [CONFIRMED, HYPOTHESIS]
-          description: 'CONFIRMED when based on a previously confirmed incident'
+          description: 'CONFIRMED only when every statement is STANDARD and a person confirmed it; otherwise HYPOTHESIS'
         likelyCause: { $ref: '#/components/schemas/Statement' }
         steps:
           type: array
@@ -1214,6 +1303,7 @@ components:
         tracingWindowHours: { type: integer, minimum: 1, default: 48 }
         baselineWindowWeeks: { type: integer, minimum: 1, default: 8 }
         detectionIntervalMinutes: { type: integer, minimum: 1 }
+        logRetentionDays: { type: integer, minimum: 1, default: 30 }
         weights:
           type: object
           description: Relative weight of each score factor

@@ -14,7 +14,7 @@ Requirements define what CIC must do, who uses it, the value delivered, and the 
 
 ### 1.2 INVEST requirements
 
-The V1 backlog includes 21 user stories. These stories cover login, change and ticket management, ticket import, baseline, anomaly and suspect review, feedback, audit log, configuration, user management, personal profile, and ITSM API ingestion.
+The V1 backlog includes 23 user stories. These stories cover login, change and ticket management, ticket import, baseline, anomaly and suspect review, feedback, audit log, configuration, user management, personal profile, ITSM and log ingestion, error-log review, and AI-suggested resolutions.
 Before a user story is ready for development, it is checked using the INVEST criteria.
 
 | Criterion       | Meaning in CIC                                                                                                      |
@@ -34,6 +34,7 @@ US07–US09   Ticket management and import
 US10–US11   Baseline
 US12–US14   Anomaly, ranked suspects, and feedback
 US20–US21   Suggested resolution and its confirmation
+US22–US23   Error logs: ingestion and review
 US15        Audit log
 US16        System configuration
 US17–US18   User management and personal profile
@@ -56,10 +57,10 @@ flowchart TB
 
     subgraph system["CIC — System Boundary"]
         direction LR
-        adminCases["<b>Administrator</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline · UC12 Recompute Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC20 View Suggested Resolution<br/>UC21 Confirm Suggested Resolution<br/>UC16 View Audit Log · UC17 Configure System<br/>UC18 Manage Users"]
-        managerCases["<b>IT Manager</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline · UC12 Recompute Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC20 View Suggested Resolution<br/>UC21 Confirm Suggested Resolution<br/>UC16 View Audit Log"]
-        engineerCases["<b>Change Engineer</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Own Changes<br/>UC07 View Tickets · UC11 View Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC20 View Suggested Resolution<br/>UC21 Confirm Suggested Resolution"]
-        agentCases["<b>Service Desk Agent</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC20 View Suggested Resolution"]
+        adminCases["<b>Administrator</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline · UC12 Recompute Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC23 View Related Error Logs<br/>UC20 View Suggested Resolution<br/>UC21 Confirm Suggested Resolution<br/>UC16 View Audit Log · UC17 Configure System<br/>UC18 Manage Users"]
+        managerCases["<b>IT Manager</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline · UC12 Recompute Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC23 View Related Error Logs<br/>UC20 View Suggested Resolution<br/>UC21 Confirm Suggested Resolution<br/>UC16 View Audit Log"]
+        engineerCases["<b>Change Engineer</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes · UC05–06 Add/Edit Own Changes<br/>UC07 View Tickets · UC11 View Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC23 View Related Error Logs<br/>UC20 View Suggested Resolution<br/>UC21 Confirm Suggested Resolution"]
+        agentCases["<b>Service Desk Agent</b><br/><br/>UC01 Login · UC02 Logout<br/>UC03 View Dashboard · UC19 Manage Profile<br/>UC04 View Changes<br/>UC07 View Tickets · UC08 Add Ticket · UC09 Import Tickets<br/>UC11 View Baseline<br/>UC14 View Anomaly and Suspects<br/>UC15 Give Suspect Feedback<br/>UC23 View Related Error Logs<br/>UC20 View Suggested Resolution"]
     end
 
     admin --> adminCases
@@ -77,7 +78,7 @@ flowchart TB
     style system fill:#f8fbff,stroke:#1168bd,stroke-dasharray:5 5
 ```
 
-Two system actors are not shown: the **ITSM system** (UC10, pushes tickets and changes through the API) and the **background processor** (UC13, detects anomalies and ranks suspects, then drafts suggested resolutions).
+Three system actors are not shown: the **ITSM system** (UC10, pushes tickets and changes through the API), the **log source** (UC22, pushes error logs through the API), and the **background processor** (UC13, detects anomalies, ranks suspects, analyzes related logs, and drafts suggested resolutions).
 
 For detailed actors, permissions, and business flows, see [Actors, roles, and use cases](docs/03-use-cases.md).
 
@@ -93,6 +94,7 @@ For detailed actors, permissions, and business flows, see [Actors, roles, and us
 | View baseline                    | Yes   | Yes        | Yes               | Yes       |
 | Recompute baseline               | Yes   | Yes        | No                | No        |
 | Give suspect feedback            | Yes   | Yes        | Yes               | Yes       |
+| View related error logs          | Yes   | Yes        | Yes               | Yes       |
 | View suggested resolution        | Yes   | Yes        | Yes               | Yes       |
 | Confirm / reject suggested resolution | Yes | Yes     | Yes               | No        |
 | Audit log                        | Yes   | Yes        | No                | No        |
@@ -138,8 +140,9 @@ flowchart TB
     A2 --> A3["Ranked suspects<br/>score + explanation"]
     A2 --> A4["Related tickets"]
     A2 --> A5["Timeline"]
+    A2 --> A8["Related error logs"]
     A2 --> A6["Suspect feedback"]
-    A2 --> A7["Suggested resolution<br/>evidence + confirm"]
+    A2 --> A7["Suggested resolution<br/>standard + hypothesis"]
 
     Records --> Chg["Changes"]
     Chg --> C1["Change list"]
@@ -176,7 +179,7 @@ flowchart TB
     class CIC root
     class Monitor,Records,Analysis,Admin,Utility group
     class Dash,Anom,Chg,Tkt,Base,Audit,Set,Usr,Prof page
-    class D1,D2,D3,A1,A2,A3,A4,A5,A6,A7,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
+    class D1,D2,D3,A1,A2,A3,A4,A5,A6,A7,A8,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
 ```
 
 **Navigation model.**
@@ -226,7 +229,7 @@ No UI prototype exists yet. Screens will be designed from the [screen inventory]
 
 ## 3. API Contract — OpenAPI 3.0
 
-The REST contract is defined with OpenAPI 3.0 and derived from the use cases and screens. It covers authentication, dashboard, anomalies and ranked suspects, suggested resolutions, changes, tickets and import, baseline, audit log, settings, users, profile, and ITSM ingestion.
+The REST contract is defined with OpenAPI 3.0 and derived from the use cases and screens. It covers authentication, dashboard, anomalies and ranked suspects, related error logs, suggested resolutions, changes, tickets and import, baseline, audit log, settings, users, profile, and ITSM ingestion.
 
 - Contract: [`docs/api/openapi.yaml`](docs/api/openapi.yaml)
 - Conventions, role per operation, and screen-to-API mapping: [API documentation](docs/api/README.md)
@@ -235,8 +238,8 @@ Key rules in the contract:
 
 - Every operation lists its allowed roles (`x-roles`); the backend enforces them.
 - A suspect carries a rule-based score (0–100) with per-factor explanations; the LLM never computes the score.
-- Every statement of a suggested resolution cites evidence, and only IT Manager, Change Engineer, and Admin can confirm it.
-- ITSM ingestion is idempotent by `externalId`; ticket import is atomic.
+- A statement about the cause cites evidence (logs, tickets, change); a resolution is either standard (cites its source) or flexible (LLM knowledge, always a hypothesis). Only IT Manager, Change Engineer, and Admin can confirm it.
+- ITSM and log ingestion are idempotent by `externalId`; sensitive data in logs is masked; ticket import is atomic.
 
 ## Documentation
 
