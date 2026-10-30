@@ -24,7 +24,7 @@ Use the project command in Claude Code:
 /implement SCR-01
 ```
 
-It runs the sync check, reads `screens/<ID>.yaml`, checks open questions, decisions, backlog, and the definition of done, then the linked docs, and only then writes code, runs the checks, ticks the YAML tasks, regenerates the tracker, commits, and pushes. `/implement` with no ID takes the next item that is ready. Source: [.claude/commands/implement.md](../.claude/commands/implement.md).
+It runs the sync check, reads `screens/<ID>.yaml`, checks open questions, decisions, backlog, and the definition of done, then the linked docs, and only then writes code, runs the checks, ticks the YAML tasks, regenerates the tracker, commits, and pushes. `/implement` with no ID takes the next item that is ready. Source: [.claude/skills/implement/SKILL.md](../.claude/skills/implement/SKILL.md).
 
 ## Status legend
 

@@ -2,7 +2,7 @@
 
 Every unit of work is one YAML file in this folder: a **screen** (frontend feature + backend modules) or a non-screen **slice** (platform, API-only, worker, AI package, verification). All files share one schema, so every screen is planned, built, and checked the same way.
 
-- `/implement <ID>` reads `<ID>.yaml` first ([.claude/commands/implement.md](../../.claude/commands/implement.md)).
+- `/implement <ID>` reads `<ID>.yaml` first ([.claude/skills/implement/SKILL.md](../../.claude/skills/implement/SKILL.md)).
 - `python project/tools/check_screens.py` validates every file against the docs and regenerates [tracker.md](../tracker.md).
 - Nothing else in `project/` repeats this data; [roadmap.md](../roadmap.md) holds milestone goals and exits, [backlog.md](../backlog.md) holds story text and priority.
 

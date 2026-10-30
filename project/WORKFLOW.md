@@ -27,6 +27,8 @@ Hướng dẫn ngắn: làm từng screen theo đúng thứ tự, từ lúc chu�
 
 Hoặc chỉ gõ `/implement` để agent tự chọn mục tiếp theo.
 
+Nếu ô chat không gợi ý `/implement`, cứ gõ thường: *implement SCR-01* hoặc *làm mục tiếp theo* — agent tự nạp skill `implement` (file `.claude/skills/implement/SKILL.md`).
+
 ## 3. Agent tự làm theo thứ tự
 
 | Bước | Agent làm gì | Khi nào dừng lại hỏi bạn |

@@ -1,5 +1,6 @@
 ---
-description: Implement one work item from project/screens (screen = frontend feature + backend modules) after checking it against the project files and docs
+name: implement
+description: Implement one CIC work item from project/screens (a screen = frontend feature + backend modules, or a PLT/API/JOB/AI/NFR slice) after checking it against project tracking and docs. Use when the user says /implement, "implement SCR-01", "làm mục tiếp theo", or asks to build the next screen or item.
 argument-hint: "[item id, e.g. SCR-01, PLT-1, API-ITSM, AI-1; empty = next ready item]"
 ---
 
