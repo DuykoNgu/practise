@@ -530,6 +530,7 @@ practise/
 │   └── database/cic.sql          # PostgreSQL schema
 ├── docs/                         # Requirements, IA, C4, data model, API, folder structure
 ├── .gitignore                    # Ignores .env files, keeps .env.example
+├── CLAUDE.md                     # Rules for coding agents
 └── README.md
 ```
 
@@ -1014,6 +1015,7 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 - Code-level design: [C4 Level 4](docs/architecture/c4/04-code.md), [class diagrams](docs/architecture/uml/01-class-diagrams.md), [sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
+- Agent rules: [CLAUDE.md](CLAUDE.md).
 
 ## Project Progress
 
