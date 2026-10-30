@@ -25,6 +25,17 @@ One row per screen or API-only slice, in build order. Update the row in the same
 | 18 | SCR-50 Audit log | M6 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 | 19 | NFR verification | M6 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 
+## AI track
+
+Columns: Code, Tests (`pytest`), Evals (`cic-ai eval` bars), Done.
+
+| Phase | Item | Code | Tests | Evals | Done | Notes |
+|---|---|---|---|---|---|---|
+| A1 | Package + masking | ⬜ | ⬜ | ⬜ | ⬜ | |
+| A2 | Classification | ⬜ | ⬜ | ⬜ | ⬜ | |
+| A3 | Suggestion pipeline (stub) + CI | ⬜ | ⬜ | ⬜ | ⬜ | |
+| A4 | Live mode + baseline | ⬜ | ⬜ | ⬜ | ⬜ | Needs Q-02, Q-08, Q-09 |
+
 ## Progress
 
 | Milestone | Rows | Done |
@@ -36,4 +47,5 @@ One row per screen or API-only slice, in build order. Update the row in the same
 | M4 | 5 | 0 |
 | M5 | 3 | 0 |
 | M6 | 2 | 0 |
-| **Total** | **20** | **0** |
+| AI track | 4 | 0 |
+| **Total** | **24** | **0** |

@@ -675,7 +675,7 @@ The REST contract is defined with OpenAPI 3.0 and derived from the use cases and
 
 ## 5. Frontend and Backend Folder Structures
 
-The frontend uses **Next.js 16 + React 19 + TypeScript**. The backend uses **Python + FastAPI**, organized by module, with a separate AI package; the API and the worker share one codebase.
+The frontend uses **Next.js 16 + React 19 + TypeScript**. The backend uses **Python + FastAPI**, organized by module; the API and the worker share one codebase. LLM and log-processing code lives in a separate package, `cic_ai` (`src/ai/`), with terminal evals and metrics.
 
 ### 5.1 Repository layout
 
@@ -684,6 +684,7 @@ practise/
 ├── src/
 │   ├── frontend/                 # Next.js 16 + React 19 (Web Frontend)
 │   ├── backend/                  # FastAPI API + Analysis Worker, one codebase
+│   ├── ai/                       # cic_ai: masking, classification, LLM suggestions, evals
 │   └── database/cic.sql          # PostgreSQL schema
 ├── docs/                         # Requirements, IA, C4, data model, API, folder structure
 ├── .gitignore                    # Ignores .env files, keeps .env.example
@@ -726,8 +727,7 @@ src/backend/
 │   │       ├── service.py       # business logic, depends on interfaces
 │   │       ├── repository.py    # Protocol + SQLAlchemy implementation
 │   │       ├── models.py  schemas.py  dependencies.py
-│   └── ai/              # LLMClient interface, llm_client, masking, evidence, generator, validator
-├── tests/               # fakes/, modules/, ai/
+├── tests/               # fakes/, modules/
 ├── alembic/
 ├── .env.example
 ├── requirements.txt     # runtime dependencies (pinned)
@@ -737,12 +737,24 @@ src/backend/
 
 ```text
 api_router → module/router → module/service → repository interface → PostgreSQL
-worker → module/service or ai/ → repository → PostgreSQL
+worker → module/service or cic_ai → repository → PostgreSQL
 ```
 
 Modules call each other only through services; implementations are injected from `core/container.py`, so tests swap them for fakes.
 
 Module ownership, rules, and environment variables: [Target Folder Structure](docs/07-folder-structure.md).
+
+### 5.4 AI package `cic_ai`
+
+```text
+src/ai/
+├── cic_ai/          # masking, classification, evidence, prompt, llm, generator, validator, pipeline, cli, evals/
+├── evals/           # datasets (JSONL with gold labels), thresholds, pricing, reports
+├── tests/
+└── pyproject.toml   # command: cic-ai mask | classify | suggest | eval | corpus
+```
+
+The backend passes an `EvidenceBundle` in and stores the validated suggestion that comes out; `cic_ai` never touches the database. Masking recall, citation coverage, label safety, prompt leaks, latency, tokens, and cost are measured with `cic-ai eval` (stub mode in CI, `--live` against the real model). Details: [AI package](docs/architecture/ai-package.md).
 
 ## 6. Detailed Class and Sequence Design
 
@@ -806,21 +818,22 @@ flowchart TB
         policy["SuggestionPolicy<br/><i>[Python class]</i><br/>Only IT Manager, Change Engineer,<br/>Admin may decide"]
         repo["SuggestionRepository<br/><i>[Protocol]</i><br/>next_version, add, get_current, update"]
         impl["SqlAlchemySuggestionRepository<br/><i>[Python class]</i>"]
+        collector["EvidenceCollector<br/>SQL walk: logs, tickets, change, rollback plan,<br/>confirmed past incidents, guidelines"]
         router --> service
         service --> policy
         service --> repo
         impl -.->|"implements"| repo
     end
 
-    subgraph ai["ai/ [Package]"]
+    subgraph ai["cic_ai [Package · src/ai]"]
         direction TB
-        collector["EvidenceCollector<br/>Logs, tickets, change, rollback plan,<br/>confirmed past incidents, guidelines"]
+        bundle["EvidenceBundle<br/>Contract: items with short refs"]
         masker["Masker<br/>Removes names, e-mails, IPs, paths"]
         generator["SuggestionGenerator<br/>Builds the prompt, parses the draft"]
         llm["LLMClient<br/><i>[Protocol]</i>"]
         provider["AnthropicLLMClient<br/>Implements LLMClient"]
         validator["EvidenceValidator<br/>Drops uncited causes,<br/>sets basis and label"]
-        collector --> masker --> generator --> llm
+        bundle --> masker --> generator --> llm
         provider -.->|"implements"| llm
         generator --> validator
     end
@@ -831,6 +844,7 @@ flowchart TB
 
     worker --> service
     service --> collector
+    collector -->|"builds"| bundle
     service --> generator
     service --> validator
     impl --> db
@@ -1188,6 +1202,7 @@ Formulas, SQL, edge cases, and tuning: [Algorithms](docs/09-algorithms.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
 - Architecture: [C4 model](docs/architecture/c4/README.md), [AI pipeline and knowledge graph](docs/architecture/ai-pipeline.md).
 - Folder structure: [Next.js and FastAPI modules](docs/07-folder-structure.md).
+- AI package: [`cic_ai` boundary, terminal CLI, evals, and metrics](docs/architecture/ai-package.md).
 - Algorithms: [Baseline, anomaly detection, suspect ranking](docs/09-algorithms.md).
 - Code-level design: [C4 Level 4](docs/architecture/c4/04-code.md), [class diagrams](docs/architecture/uml/01-class-diagrams.md), [sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).

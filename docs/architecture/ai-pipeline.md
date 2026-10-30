@@ -1,6 +1,6 @@
 # AI Pipeline and Knowledge Graph
 
-> **Status:** Target design · Implements F05, F06, F12, F13 · Runs in the Analysis Worker
+> **Status:** Target design · Implements F05, F06, F12, F13 · Runs in the Analysis Worker · Steps ②, ⑥, ⑦ live in the [`cic_ai` package](ai-package.md)
 
 The AI part answers two questions for every abnormal spike of tickets: **which recent change is the likely cause** (rule-based ranking) and **what should we do** (LLM reasoning over evidence). The LLM never decides the ranking, and every cause it states must point to evidence in the knowledge graph.
 
@@ -94,12 +94,12 @@ flowchart TB
 | Step | What happens | Code (see [class diagrams](uml/01-class-diagrams.md)) | Data |
 |---|---|---|---|
 | ① Input | Logs, tickets, and changes arrive through the API or the UI | `integration`, `tickets`, `changes` modules | `error_logs`, `tickets`, `changes` |
-| ② Extraction & classification | Mask sensitive data, compute signature and category, map device groups to department and branch | `ai/masking.py`, `LogService`, `LookupService` | `error_logs.signature`, `category_id` |
+| ② Extraction & classification | Mask sensitive data, compute signature and category, map device groups to department and branch | `cic_ai.masking`, `cic_ai.classification`, `LogService`, `LookupService` | `error_logs.signature`, `category_id` |
 | ③ Detection & ranking | Compare counts with the baseline, create anomalies, score candidate changes | `BaselineService`, `AnomalyDetectionService`, `SuspectScorer` | `baseline_*`, `anomalies`, `suspects`, `suspect_factors` |
 | ④ Knowledge graph | All entities and their links, stored relationally (section 2) | Repositories | All tables below |
-| ⑤ Retrieval | Walk the graph from the suspect to collect evidence | `EvidenceCollector` | Read-only joins |
-| ⑥ LLM reasoning | Send masked evidence with ids; receive cause and steps that cite ids | `SuggestionGenerator`, `LLMClient` | — |
-| ⑦ Validation | Remove uncited causes; mark each step Standard or Flexible | `EvidenceValidator` | — |
+| ⑤ Retrieval | Walk the graph from the suspect to collect evidence | `EvidenceCollector` (backend, `modules/suggestions`) → `cic_ai.EvidenceBundle` | Read-only joins |
+| ⑥ LLM reasoning | Send masked evidence with ids; receive cause and steps that cite ids | `cic_ai`: `SuggestionGenerator`, `LLMClient` | — |
+| ⑦ Validation | Remove uncited causes; mark each step Standard or Flexible | `cic_ai`: `EvidenceValidator` | — |
 | ⑧ Output | Store the suggestion with status and label | `SuggestionService` | `suggestions`, `suggestion_statements`, `statement_evidence` |
 | ⑨ Feedback | Users judge suspects and confirm or reject suggestions; confirmed ones feed back into the graph | `anomalies`, `suggestions` modules | `suspect_feedback`, `suggestions.decision` |
 
@@ -227,3 +227,7 @@ After an IT Manager confirms it, the suggestion is recorded as confirmed but sta
 | Notification + Feedback | ⑨ In-app review and feedback. Push notifications (e-mail, chat) are not in V1 scope |
 
 Rules behind each stage: [BR-008, BR-010–BR-017](../requirements/business-rules.md). Measurable targets: [NFR-AI-001–004, NFR-PRIV-001–002](../requirements/non-functional-requirements.md).
+
+## 5. Evaluation
+
+Steps ②, ⑥, and ⑦ are measured from the terminal with `cic-ai eval` against labelled datasets: masking recall, classification accuracy, citation coverage, hallucinated refs, label safety, prompt leaks, latency, tokens, and cost. Datasets, metric ids, pass bars, and report format: [AI package — Evals and metrics](ai-package.md#6-metrics).

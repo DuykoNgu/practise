@@ -34,6 +34,14 @@ A screen (or API-only slice) is ✅ only when every item holds.
 - [ ] [tracker.md](tracker.md) and [backlog.md](backlog.md) updated.
 - [ ] New decisions added to [decisions.md](decisions.md); new risks or questions to [risks-and-questions.md](risks-and-questions.md).
 
+## AI phase
+
+- [ ] Tasks of the phase in [plans/ai-package.md](plans/ai-package.md) meet their "done when".
+- [ ] `ruff`, `mypy --strict`, `pytest` pass in `src/ai`; coverage meets NFR-MAINT-001.
+- [ ] `cic-ai eval all` passes every stub bar; new behavior has new dataset cases.
+- [ ] Live eval results (when run with approval) are recorded with model, effort, cost, and report path.
+- [ ] No imports from `src/backend`; no code comments.
+
 ## Milestone
 
 - [ ] Every row of the milestone in [tracker.md](tracker.md) is ✅.

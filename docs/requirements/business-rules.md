@@ -48,7 +48,7 @@ Each rule names where it comes from and where it is enforced. Numbers marked *co
 ### BR-008 — Log masking
 - **Source:** F13.2, AC-UC22
 - **Rule:** User names, e-mail addresses, IP addresses, and file paths in a log message are replaced by `***` before the log is stored. The raw message is never stored and never sent to the LLM.
-- **Enforced in:** `ai/masking.py`, called by `LogService.ingest`.
+- **Enforced in:** `cic_ai.masking` (`src/ai`), called by `LogService.ingest`; measured by `cic-ai eval masking`.
 
 ## Detection
 

@@ -37,15 +37,15 @@ These targets are a realistic baseline for an internal IT tool in a small-to-med
 | NFR-SEC-004 | Every protected operation checks role and ownership in the backend. | Endpoint × role test matrix | `INT-RBAC-*` |
 | NFR-SEC-005 | Passwords, hashes, JWTs, API keys, `LLM_API_KEY`, and raw log messages never appear in application logs, audit entries, or LLM requests. | Inspection of sampled logs, audit rows, and captured LLM prompts | `SEC-LOG-001` |
 | NFR-SEC-006 | API keys are stored only as hashes and can be deactivated without a redeploy. | Database inspection, deactivation test | `SEC-APIKEY-001` |
-| NFR-PRIV-001 | Masking removes 100% of the seeded sensitive patterns (user names, e-mail, IPv4/IPv6, Windows and Unix paths) in a test corpus of at least 500 log lines. | Remaining matches after masking | `UNIT-MASK-001` |
-| NFR-PRIV-002 | Only masked text is sent to the LLM provider. | Captured requests in integration tests | `INT-AI-002` |
+| NFR-PRIV-001 | Masking removes 100% of the seeded sensitive patterns (user names, e-mail, IPv4/IPv6, Windows and Unix paths) in a test corpus of at least 500 log lines. | Remaining matches after masking | `UNIT-MASK-001`, `cic-ai eval masking` |
+| NFR-PRIV-002 | Only masked text is sent to the LLM provider. | Captured requests in integration tests | `INT-AI-002`, `cic-ai eval suggestion` |
 
 ## AI quality and safety
 
 | ID | Statement | Measurement | Verification |
 |---|---|---|---|
-| NFR-AI-001 | 100% of stored cause statements have at least one valid evidence item. | Query over `suggestion_statements` and `statement_evidence` | `INT-AI-003` |
-| NFR-AI-002 | No suggestion containing an `LLM_KNOWLEDGE` step is labeled `CONFIRMED`. | Query over suggestions | `INT-AI-004` |
+| NFR-AI-001 | 100% of stored cause statements have at least one valid evidence item. | Query over `suggestion_statements` and `statement_evidence` | `INT-AI-003`, `cic-ai eval suggestion` |
+| NFR-AI-002 | No suggestion containing an `LLM_KNOWLEDGE` step is labeled `CONFIRMED`. | Query over suggestions | `INT-AI-004`, `cic-ai eval suggestion` |
 | NFR-AI-003 | An LLM outage does not delay or change suspect ranking. | Ranking with the LLM stub failing | `INT-AI-005` |
 | NFR-AI-004 | Target: the confirmed cause is in the top 3 suspects for ≥ 70% of anomalies that received a `CORRECT_CAUSE` verdict. | Monthly report from `suspect_feedback` | `OPS-QUALITY-001` (tracked, used to tune weights) |
 
@@ -58,8 +58,8 @@ These targets are a realistic baseline for an internal IT tool in a small-to-med
 | NFR-BCP-001 | PostgreSQL is backed up daily and kept 30 days; RPO ≤ 24 h, RTO ≤ 4 h. | Backup timestamps, timed restore | `OPS-RESTORE-001` |
 | NFR-RET-001 | Error logs are kept for the configured retention (default 30 days); audit entries are kept at least 1 year. | Row ages | `OPS-RET-001` |
 | NFR-OBS-001 | API and worker emit structured JSON logs with a trace id and expose `/health`; the worker reports its last job time. | Log schema, health checks | `INT-OBS-001` |
-| NFR-MAINT-001 | Unit coverage ≥ 80% for module services and `ai/`; ≥ 90% for `SuspectScorer`, `EvidenceValidator`, masking, and policies. | Coverage report | CI |
-| NFR-MAINT-002 | Lint, type checks, tests, OpenAPI validation, and migrations pass in CI with no errors. | CI exit status | CI |
+| NFR-MAINT-001 | Unit coverage ≥ 80% for module services and `cic_ai`; ≥ 90% for `SuspectScorer`, `EvidenceValidator`, masking, and policies. | Coverage report | CI |
+| NFR-MAINT-002 | Lint, type checks, tests, OpenAPI validation, migrations, and `cic-ai eval all` (stub mode) pass in CI with no errors. | CI exit status | CI |
 | NFR-ACC-001 | Inputs have visible labels, status is never shown by color alone, and keyboard/focus behavior meets applicable WCAG 2.1 AA criteria. | Accessibility audit | `A11Y-001` |
 | NFR-I18N-001 | Times are stored in UTC and displayed in the viewer's time zone; the UI supports Vietnamese text. | UI and API checks | `UI-TIME-001` |
 

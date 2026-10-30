@@ -11,6 +11,7 @@ This folder tracks **how** CIC V1 gets built: milestones, backlog, progress per 
 | [decisions.md](decisions.md) | Decision log with reasons | A technical or product decision is made |
 | [risks-and-questions.md](risks-and-questions.md) | Risks, open questions, doc inconsistencies | A risk or question appears or is resolved |
 | [sprints/](sprints/README.md) | Sprint template and sprint plans | A sprint is planned or reviewed |
+| [plans/](plans/ai-package.md) | Work plans for larger tracks (AI package and evals) | A plan starts, changes, or a phase finishes |
 
 ## Status legend
 
@@ -41,4 +42,5 @@ flowchart LR
 
 - Design phase: **complete** (scope, features, use cases, INVEST backlog, IA, acceptance criteria, business rules, NFRs, algorithms, C4, data model, OpenAPI, folder structure, class and sequence diagrams).
 - Dependency setup: **complete** (`src/backend/requirements*.txt`, `src/frontend/package.json` with Tailwind CSS 4, shadcn/ui, TanStack Query).
-- Implementation: **not started** — next milestone is [M0 Platform](roadmap.md#m0--platform).
+- Implementation: **not started** — next milestone is [M0 Platform](roadmap.md#m0--platform); the [AI track](roadmap.md#ai-track) A1–A4 can run in parallel.
+- AI package: **planned** — design in [ai-package.md](../docs/architecture/ai-package.md), plan in [plans/ai-package.md](plans/ai-package.md).

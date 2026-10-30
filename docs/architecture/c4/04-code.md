@@ -5,7 +5,7 @@
 The two features that answer the core question "which recent change caused this spike, and what should we do?":
 
 - **L4.1 Suspect Ranking** — `modules/anomalies` (rule-based, no LLM).
-- **L4.2 Suggested Resolution** — `modules/suggestions` + `ai/` (LLM with evidence validation).
+- **L4.2 Suggested Resolution** — `modules/suggestions` + the [`cic_ai` package](../ai-package.md) (LLM with evidence validation).
 
 Both run in the Analysis Worker; users read the results through the Backend API.
 
@@ -63,21 +63,22 @@ flowchart TB
         policy["SuggestionPolicy<br/><i>[Python class]</i><br/>Only IT Manager, Change Engineer,<br/>Admin may decide"]
         repo["SuggestionRepository<br/><i>[Protocol]</i><br/>next_version, add, get_current, update"]
         impl["SqlAlchemySuggestionRepository<br/><i>[Python class]</i>"]
+        collector["EvidenceCollector<br/>SQL walk: logs, tickets, change, rollback plan,<br/>confirmed past incidents, guidelines"]
         router --> service
         service --> policy
         service --> repo
         impl -.->|"implements"| repo
     end
 
-    subgraph ai["ai/ [Package]"]
+    subgraph ai["cic_ai [Package · src/ai]"]
         direction TB
-        collector["EvidenceCollector<br/>Logs, tickets, change, rollback plan,<br/>confirmed past incidents, guidelines"]
+        bundle["EvidenceBundle<br/>Contract: items with short refs"]
         masker["Masker<br/>Removes names, e-mails, IPs, paths"]
         generator["SuggestionGenerator<br/>Builds the prompt, parses the draft"]
         llm["LLMClient<br/><i>[Protocol]</i>"]
         provider["AnthropicLLMClient<br/>Implements LLMClient"]
         validator["EvidenceValidator<br/>Drops uncited causes,<br/>sets basis and label"]
-        collector --> masker --> generator --> llm
+        bundle --> masker --> generator --> llm
         provider -.->|"implements"| llm
         generator --> validator
     end
@@ -88,6 +89,7 @@ flowchart TB
 
     worker --> service
     service --> collector
+    collector -->|"builds"| bundle
     service --> generator
     service --> validator
     impl --> db
@@ -103,8 +105,8 @@ flowchart TB
 
 ## Shared rules for both features
 
-- The suspicion score is final before `ai/` runs; `SuggestionService.generate` reads suspects, it never changes scores.
+- The suspicion score is final before `cic_ai` runs; `SuggestionService.generate` reads suspects, it never changes scores.
 - `SuspectScorer` and `EvidenceValidator` are pure classes (no database, no network) so they are unit-tested directly.
-- Services depend on Protocols; `core/container.py` binds the SQLAlchemy repositories and `AnthropicLLMClient`. Tests use `tests/fakes/`.
+- Services depend on Protocols; `core/container.py` binds the SQLAlchemy repositories and `cic_ai.AnthropicLLMClient`. Tests use `tests/fakes/` and `cic_ai.StubLLMClient`.
 - If the LLM call fails, the suggestion is stored with status `FAILED`, the job is retried up to `max_attempts`, and the screen shows "No supported suggestion".
 - Every decision (confirm / reject) and every feedback is written to the audit log through `AuditService`.

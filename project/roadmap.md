@@ -10,6 +10,10 @@ flowchart LR
     M3 --> M4["M4<br/>Detection and ranking"]
     M4 --> M5["M5<br/>AI evidence"]
     M5 --> M6["M6<br/>Audit and hardening"]
+    A1["A1<br/>Masking"] --> A2["A2<br/>Classification"]
+    A2 --> A3["A3<br/>Suggestion pipeline<br/>(stub)"]
+    A3 --> A4["A4<br/>Live mode<br/>and baseline"]
+    A4 --> M5
 ```
 
 | Milestone | Screens | Stories | Status |
@@ -21,6 +25,7 @@ flowchart LR
 | [M4 Detection and ranking](#m4--detection-and-ranking) | SCR-40, SCR-10, SCR-11, SCR-02 | US10–US14, US03 | ⬜ |
 | [M5 AI evidence](#m5--ai-evidence) | SCR-11 (logs and suggestion tabs) | US22, US23, US20, US21 | ⬜ |
 | [M6 Audit and hardening](#m6--audit-and-hardening) | SCR-50 | US15 | ⬜ |
+| [AI track A1–A4](#ai-track) | — (terminal only) | supports US20, US22, US23 | ⬜ |
 
 ## M0 — Platform
 
@@ -83,12 +88,12 @@ Follows [09-algorithms.md](../docs/09-algorithms.md). Covers BR-009–BR-012, NF
 
 | Order | Screen | Stories | Backend modules |
 |---|---|---|---|
-| 1 | Log intake (no screen) | US22 | `logs`, `integration`, `ai/masking.py` |
+| 1 | Log intake (no screen) | US22 | `logs`, `integration`, `cic_ai.masking`, `cic_ai.classification` |
 | 2 | SCR-11 Related logs tab | US23 | `anomalies`, `logs` |
-| 3 | SCR-11 Suggestion panel | US20 | `suggestions`, `ai/`, worker |
+| 3 | SCR-11 Suggestion panel | US20 | `suggestions` (`EvidenceCollector`), `cic_ai.pipeline`, worker |
 | 4 | SCR-11 Confirm / reject | US21 | `suggestions` |
 
-Follows [ai-pipeline.md](../docs/architecture/ai-pipeline.md). Covers BR-008, BR-013–BR-018, NFR-PRIV-001–002, NFR-AI-001–003, NFR-TIME-003.
+Follows [ai-pipeline.md](../docs/architecture/ai-pipeline.md). Starts only after AI track A1–A4 is done; this is phase A5 of the [AI plan](plans/ai-package.md). Covers BR-008, BR-013–BR-018, NFR-PRIV-001–002, NFR-AI-001–003, NFR-TIME-003.
 **Exit:** suggestions cite evidence, flexible steps stay Hypothesis, an LLM outage leaves ranking untouched.
 
 ## M6 — Audit and hardening
@@ -102,3 +107,14 @@ Follows [ai-pipeline.md](../docs/architecture/ai-pipeline.md). Covers BR-008, BR
 | 5 | Backup/restore and retention jobs (NFR-BCP-001, NFR-RET-001) | — |
 
 **Exit:** every NFR verification in [non-functional-requirements.md](../docs/requirements/non-functional-requirements.md) passes under the reference workload.
+
+## AI track
+
+The `cic_ai` package is built and measured from the terminal, in parallel with M0–M4, and joins the backend in M5. Plan: [plans/ai-package.md](plans/ai-package.md). Design: [ai-package.md](../docs/architecture/ai-package.md).
+
+| Phase | Delivers | Exit |
+|---|---|---|
+| A1 Masking | Package skeleton, `Masker`, corpus ≥ 500 lines, `cic-ai mask`, `cic-ai eval masking` | M-MASK-01 = 1.00, M-MASK-02 = 0 |
+| A2 Classification | `LogClassifier`, dataset, `cic-ai classify`, `cic-ai eval classification` | M-CLS bars pass |
+| A3 Suggestion pipeline (stub) | Evidence contract, prompt, parser, validator, stub client, ≥ 30 cases, CI job | All stub bars pass in CI |
+| A4 Live mode and baseline | `AnthropicLLMClient`, pricing, latency and cost metrics, first live baseline | Baseline recorded in decisions.md |

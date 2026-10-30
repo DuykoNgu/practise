@@ -24,8 +24,9 @@ These rules apply to every coding task in this repository. They take precedence 
 | `SCR-80` Profile | `(workspace)/profile` | `profile` | `users` |
 | `SCR-90` Forbidden | `forbidden` | — | — |
 | No screen (US19, US22) | — | — | `integration`, `logs` |
+| AI track A1–A4 (no screen) | — | — | Package `src/ai` (`cic_ai`), see [AI package](docs/architecture/ai-package.md) |
 
-Shared code (`src/frontend/components/`, `src/frontend/lib/`, `src/backend/app/core/`, `src/backend/app/ai/`) is added only when the current screen needs it.
+Shared code (`src/frontend/components/`, `src/frontend/lib/`, `src/backend/app/core/`) is added only when the current screen needs it. AI work follows the phases in [project/plans/ai-package.md](project/plans/ai-package.md), one phase at a time.
 
 ## 2. Use the matching skills
 
@@ -50,12 +51,19 @@ Frontend (Next.js 16 + React 19 + TypeScript):
 - Keep pages light: Server Components by default, `"use client"` only where interaction needs it, heavy client parts (charts) loaded with `next/dynamic`.
 - TypeScript clean code: `strict` mode, no `any`, small components, logic in `hooks/`, API calls only in `api.ts`; checked with `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`.
 
+AI package (`src/ai`, `cic_ai`):
+
+- Keep the boundary in [AI package](docs/architecture/ai-package.md): no imports from `src/backend`, no database, no web server; only `cic_ai.llm` calls the LLM, and only with masked text.
+- Use the `claude-api` skill before writing or changing any Anthropic SDK call.
+- Every behavior change comes with dataset cases and passes `cic-ai eval all` in stub mode; checked with `ruff`, `mypy --strict`, `pytest`.
+- `--live` evals cost money: run them only after the user approves, and report the printed cost.
+
 Before every commit: `simplify`, then `code-review`.
 
 ## 3. Stay within the limits
 
 - Implement only what the docs define for V1: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md). Never build anything listed under *Non-goals*.
-- Follow the agreed structure and rules in [Folder structure](docs/07-folder-structure.md): the dependency flow, module boundaries (other modules only through their service), services depending on interfaces, and `ai/` rules.
+- Follow the agreed structure and rules in [Folder structure](docs/07-folder-structure.md): the dependency flow, module boundaries (other modules only through their service), services depending on interfaces, and the `cic_ai` boundary.
 - Follow the API contract in `docs/api/openapi.yaml` and the schema in `src/database/cic.sql`. Do not change either without asking the user.
 - Do not add libraries, endpoints, tables, columns, screens, or settings that the docs do not define without asking the user.
 - Do not refactor code outside the current screen.
@@ -69,7 +77,7 @@ Before every commit: `simplify`, then `code-review`.
 
 ## 5. Test and verify quality
 
-- Write tests together with the code. Backend: `pytest` in `src/backend/tests/` (`modules/<module>/`, fakes from `tests/fakes/`). Frontend: tests in `src/frontend/tests/`.
+- Write tests together with the code. Backend: `pytest` in `src/backend/tests/` (`modules/<module>/`, fakes from `tests/fakes/`). AI package: `pytest` in `src/ai/tests/` plus `cic-ai eval`. Frontend: tests in `src/frontend/tests/`.
 - Cover the happy path, validation errors, 401, 403, conflicts, and the empty/loading/error states from the UI/UX state contract.
 - Before reporting a screen as done, run and pass: format, lint, type check, and all tests for both sides. Report failures as they are; never skip, disable, or weaken a test to get green.
 

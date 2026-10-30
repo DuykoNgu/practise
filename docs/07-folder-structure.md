@@ -2,7 +2,7 @@
 
 > Design status: TARGET V1 · Agreed structure, no application code yet
 
-Frontend: **Next.js 16 (App Router) + React 19 + TypeScript**. Backend: **Python + FastAPI**, organized by **module**, with a separate **AI** package. The Backend API and the Analysis Worker share one codebase and one Docker image (see [C2 — Container](architecture/c4/02-container.md)).
+Frontend: **Next.js 16 (App Router) + React 19 + TypeScript**. Backend: **Python + FastAPI**, organized by **module**. LLM and log-processing code lives in its own package, **`cic_ai`** (`src/ai/`), used by the backend as a library and runnable from the terminal. The Backend API and the Analysis Worker share one codebase and one Docker image (see [C2 — Container](architecture/c4/02-container.md)).
 
 ## 1. Repository
 
@@ -11,6 +11,7 @@ practise/
 ├── src/
 │   ├── frontend/                 # Next.js 16 + React 19 (Web Frontend)
 │   ├── backend/                  # FastAPI API + Analysis Worker, one codebase
+│   ├── ai/                       # cic_ai: masking, log classification, LLM suggestions, terminal evals
 │   └── database/
 │       └── cic.sql               # PostgreSQL schema (becomes the first migration)
 ├── docs/
@@ -93,7 +94,7 @@ Rules:
 src/backend/
 ├── app/
 │   ├── main.py                   # Creates the FastAPI app, includes api_router
-│   ├── worker.py                 # Background loop: claims jobs, calls module services and ai/
+│   ├── worker.py                 # Background loop: claims jobs, calls module services and cic_ai
 │   ├── api_router.py             # Collects every module router under /api/v1
 │   ├── core/                     # Shared
 │   │   ├── config.py             # Reads .env
@@ -112,21 +113,13 @@ src/backend/
 │   │   ├── integration/          # ITSM / Log Source endpoints → tickets, changes, logs services
 │   │   ├── baseline/
 │   │   ├── anomalies/            # Anomalies, suspects, scoring, feedback
-│   │   ├── suggestions/          # Read and confirm suggested resolutions
+│   │   ├── suggestions/          # Suggestions + EvidenceCollector (SQL walk → cic_ai EvidenceBundle)
 │   │   ├── dashboard/
 │   │   ├── audit/
 │   │   └── jobs/                 # Job table: API creates jobs, worker claims them
-│   └── ai/                       # Separate AI package
-│       ├── interfaces.py         # Protocol: LLMClient
-│       ├── llm_client.py         # Calls the LLM provider
-│       ├── masking.py            # Masks sensitive data before sending
-│       ├── evidence_collector.py
-│       ├── generator.py          # Drafts cause and resolution
-│       └── validator.py          # Checks evidence, sets Standard/Hypothesis
 ├── tests/
-│   ├── fakes/                    # In-memory repositories and LLMClient
-│   ├── modules/                  # Tests per module
-│   └── ai/
+│   ├── fakes/                    # In-memory repositories and a stub LLMClient
+│   └── modules/                  # Tests per module
 ├── alembic/                      # Migrations; the first one is cic.sql
 ├── .env.example
 ├── requirements.txt              # Runtime dependencies (pinned), used by the Dockerfile
@@ -134,7 +127,7 @@ src/backend/
 └── Dockerfile                    # One image, run as `api` or `worker`
 ```
 
-Main runtime libraries: FastAPI, Uvicorn, Pydantic 2 + pydantic-settings, SQLAlchemy 2 + psycopg 3, Alembic, PyJWT, pwdlib (Argon2), python-multipart, pandas + NumPy + openpyxl (import, baseline, anomaly detection), Anthropic SDK, httpx.
+Main runtime libraries: FastAPI, Uvicorn, Pydantic 2 + pydantic-settings, SQLAlchemy 2 + psycopg 3, Alembic, PyJWT, pwdlib (Argon2), python-multipart, pandas + NumPy + openpyxl (import, baseline, anomaly detection), httpx, and the local `cic-ai` package (which brings the Anthropic SDK).
 
 ### Inside a module (example: `modules/changes/`)
 
@@ -152,17 +145,17 @@ changes/
 
 ```text
 api_router → module/router → module/service → module/repository (interface) → PostgreSQL
-worker     → module/service or ai/          → repository                     → PostgreSQL
-ai/generator → LLMClient (interface) → llm_client → LLM provider
+worker     → module/service or cic_ai       → repository                     → PostgreSQL
+cic_ai.pipeline → LLMClient (interface) → AnthropicLLMClient → LLM provider
 ```
 
 ### Rules
 
 - A module calls another module only through its **service**, never its repository (for example, `integration` calls `tickets.service`).
 - A **service depends on interfaces** (repository Protocols, `LLMClient`); implementations are bound in `core/container.py`. Tests replace them with `tests/fakes/`.
-- `ai/` has no router: users read results through the `suggestions` module; the worker calls `ai/` to draft them.
-- The suspicion score is computed in `modules/anomalies/service.py` before `ai/` runs, so it never depends on the LLM.
-- Only `ai/llm_client.py` talks to the LLM provider, and only after `ai/masking.py`.
+- `cic_ai` has no router and no database access: the backend passes it an `EvidenceBundle` and stores what it returns; users read results through the `suggestions` module.
+- The suspicion score is computed in `modules/anomalies/service.py` before `cic_ai` runs, so it never depends on the LLM.
+- Only `cic_ai.llm` talks to the LLM provider, and only with text that passed `cic_ai.masking`.
 
 ### Module ownership
 
@@ -182,7 +175,19 @@ ai/generator → LLMClient (interface) → llm_client → LLM provider
 | audit | `audit_logs` | Audit |
 | jobs | `jobs` | — |
 
-## 4. Environment variables
+## 4. AI package — `cic_ai`
+
+```text
+src/ai/
+├── cic_ai/          # masking, classification, evidence, prompt, llm, generator, validator, pipeline, settings, cli, evals/
+├── evals/           # datasets/ (JSONL with gold labels), thresholds.toml, pricing.toml, reports/ (ignored)
+├── tests/
+└── pyproject.toml   # package `cic-ai`, command `cic-ai`
+```
+
+Terminal commands: `cic-ai mask`, `cic-ai classify`, `cic-ai suggest`, `cic-ai eval`, `cic-ai corpus`. Stub mode runs offline in CI; `--live` calls the real model. Boundary, datasets, metrics, and report format: [AI package](architecture/ai-package.md).
+
+## 5. Environment variables
 
 Templates: [`src/backend/.env.example`](../src/backend/.env.example) and [`src/frontend/.env.example`](../src/frontend/.env.example). Copy to `.env` / `.env.local`; these real files are ignored by Git.
 
@@ -192,7 +197,7 @@ Templates: [`src/backend/.env.example`](../src/backend/.env.example) and [`src/f
 | `DATABASE_URL`, `DATABASE_SCHEMA` | API, worker | PostgreSQL connection |
 | `JWT_SECRET`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES` | API | User authentication |
 | `FILE_STORAGE_DIR`, `IMPORT_MAX_FILE_MB`, `IMPORT_MAX_ROWS` | API | Ticket import files and limits |
-| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES` | Worker | LLM provider |
+| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES` | Worker, `cic-ai` CLI | LLM provider, read by `cic_ai.settings` (`LLM_EFFORT` proposed, see Q-08) |
 | `WORKER_ID`, `WORKER_POLL_INTERVAL_SECONDS` | Worker | Job polling |
 | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_NAME` | Frontend | API address, app name |
 

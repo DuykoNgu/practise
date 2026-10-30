@@ -279,7 +279,7 @@ classDiagram
 
 Rules: the score is `round(100 × Σ(weightᵢ × factorᵢ) / Σ weightᵢ)` with each factor in [0, 1], capped at 39 when scope and keyword match are both 0 (factor formulas: [09-algorithms.md](../../09-algorithms.md#4-suspect-ranking)); level is High ≥ 70, Medium ≥ 40, otherwise Low; ranks are 1..n by descending score; a new ranking replaces the old suspects of that anomaly in one transaction and enqueues one `SUGGESTION_GENERATION` job per suspect.
 
-## 4. Suggested Resolution — `modules/suggestions` + `ai/`
+## 4. Suggested Resolution — `modules/suggestions` + `cic_ai` (`src/ai`)
 
 ```mermaid
 classDiagram

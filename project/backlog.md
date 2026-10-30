@@ -22,9 +22,9 @@ Source of truth for story text: [05-invest-requirements.md](../docs/05-invest-re
 | US13 | Rollback plan and implementer of a suspect | F07 | Must | SCR-11 | `anomalies` | `anomalies`, `changes` | AC-UC14 | M4 | ⬜ |
 | US14 | Suspect feedback | F08 | Should | SCR-11 | `anomalies` | `anomalies` | AC-UC15 | M4 | ⬜ |
 | US03 | Dashboard of open anomalies | F07 | Must | SCR-02 | `dashboard` | `dashboard` | AC-UC03 | M4 | ⬜ |
-| US22 | Log source pushes error logs | F13 | Should | — (API) | — | `logs`, `integration` | AC-UC22 | M5 | ⬜ |
+| US22 | Log source pushes error logs | F13 | Should | — (API) | — | `logs`, `integration`, `cic_ai` | AC-UC22 | A1–A2, M5 | ⬜ |
 | US23 | Related error logs of an anomaly | F13 | Should | SCR-11 | `anomalies` | `anomalies`, `logs` | AC-UC23 | M5 | ⬜ |
-| US20 | Suggested cause and resolution with evidence | F12 | Should | SCR-11 | `suggestions` | `suggestions`, `ai/` | AC-UC20 | M5 | ⬜ |
+| US20 | Suggested cause and resolution with evidence | F12 | Should | SCR-11 | `suggestions` | `suggestions`, `cic_ai` | AC-UC20 | A3–A4, M5 | ⬜ |
 | US21 | Confirm or reject suggestion | F12 | Should | SCR-11 | `suggestions` | `suggestions` | AC-UC21 | M5 | ⬜ |
 | US15 | Inspect audit events | F10 | Should | SCR-50 | `audit` | `audit` | AC-UC16 | M6 | ⬜ |
 

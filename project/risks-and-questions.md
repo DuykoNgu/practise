@@ -11,6 +11,9 @@
 | Q-05 | Which plugins replace the current skills in `CLAUDE.md` §2 (py-pit, lattice, design-drift) and which design style (Linear, Vercel, other)? | M0 UI shell | Product owner | Open |
 | Q-06 | Where is V1 deployed (on-prem VM, cloud, container platform) and who runs backups (NFR-BCP-001)? | M6 | Operations | Open |
 | Q-07 | Is a seeded demo dataset (8 weeks of tickets) needed for review demos? | M4 exit | Product owner | Open |
+| Q-08 | Approve the new `LLM_EFFORT` environment variable (default `medium`)? | A4 | Product owner | Open |
+| Q-09 | Confirm the proposed eval bars (M-CLS-01 ≥ 0.85, M-SUG-05 ≥ 0.80, M-SUG-06 ≥ 0.70, latency p95 ≤ 60 s) after the first live baseline? | A4 | Product owner | Open |
+| Q-10 | Who labels the gold suggestion cases (IT Manager review)? | A3 | Product owner | Open |
 
 ## Doc inconsistencies
 
@@ -32,3 +35,5 @@
 | R-06 | Dependency churn (Next.js 16, Tailwind 4, TanStack Table 9, pandas 3 are recent majors). | Medium | Medium | Pinned versions, lockfile, CI on every push, upgrade one major at a time. | Tech lead |
 | R-07 | Scope creep beyond V1 (chatbot, auto-rollback, log platform). | Medium | Medium | Non-goals in [01-scope.md](../docs/01-scope.md); `CLAUDE.md` §3. | Product |
 | R-08 | Performance targets missed at capacity (200k tickets, 2M logs). | Medium | Medium | Indexes from 06-data-model.md, paginated APIs, load tests in M6 earlier for heavy queries. | Backend |
+| R-09 | Live evals add LLM cost on every run. | Medium | Low | Stub mode by default and in CI; `--limit`; cost printed per run; live runs need approval. | AI |
+| R-10 | Contract drift between `cic_ai.EvidenceBundle` and the backend `EvidenceCollector`. | Medium | Medium | Single model in `cic_ai.evidence`; backend tests build bundles with it. | Backend |
