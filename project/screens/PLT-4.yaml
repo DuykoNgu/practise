@@ -5,7 +5,7 @@ track: main
 milestone: M0
 order: 4
 depends_on: [PLT-2, PLT-3]
-status: todo
+status: review
 roles: {}
 stories: []
 acceptance: []
@@ -22,14 +22,16 @@ backend:
   jobs: []
 tasks:
   backend:
-    - "[ ] CI: backend ruff, mypy, pytest; frontend format, lint, typecheck, test, build"
-    - "[ ] CI: OpenAPI validation, migration check, python project/tools/check_screens.py"
-    - "[ ] CI: src/ai ruff, mypy, pytest, cic-ai eval all in stub mode once AI-1 lands"
-    - "[ ] Dockerfile: one image started as api or worker"
-    - "[ ] Local compose for PostgreSQL, API, worker, web"
+    - "[x] CI: backend ruff, mypy, pytest; frontend format, lint, typecheck, test, build"
+    - "[x] CI: OpenAPI validation, migration check, python project/tools/check_screens.py"
+    - "[x] CI: src/ai ruff, mypy, pytest, cic-ai eval all in stub mode once AI-1 lands"
+    - "[x] Dockerfile: one image started as api or worker"
+    - "[x] Local compose for PostgreSQL, API, worker, web"
   tests:
     - "[ ] CI green on main"
 done_when:
   - CI is green on main and the image starts as api and worker
-skills_used: []
+skills_used:
+  - simplify
+  - code-review
 open: [Q-06]
