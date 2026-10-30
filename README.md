@@ -274,7 +274,7 @@ flowchart TB
     subgraph platform["CIC [Software System Boundary]"]
         direction TB
         subgraph presentation["Presentation"]
-            web["Web Frontend<br/><i>[Container: React + Vite SPA]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
+            web["Web Frontend<br/><i>[Container: Next.js 14 + React 18]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
         end
         subgraph application["Application"]
             api["Backend API<br/><i>[Container: Python + FastAPI]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
@@ -516,12 +516,79 @@ The REST contract is defined with OpenAPI 3.0 and derived from the use cases and
 - Contract: [`docs/api/openapi.yaml`](docs/api/openapi.yaml)
 - Conventions, role per operation, and screen-to-API mapping: [API documentation](docs/api/README.md)
 
+## 5. Frontend and Backend Folder Structures
+
+The frontend uses **Next.js 14 + React 18 + TypeScript**. The backend uses **Python + FastAPI**, organized by module, with a separate AI package; the API and the worker share one codebase.
+
+### 5.1 Repository layout
+
+```text
+practise/
+├── src/
+│   ├── frontend/                 # Next.js 14 + React 18 (Web Frontend)
+│   ├── backend/                  # FastAPI API + Analysis Worker, one codebase
+│   └── database/cic.sql          # PostgreSQL schema
+├── docs/                         # Requirements, IA, C4, data model, API, folder structure
+├── .gitignore                    # Ignores .env files, keeps .env.example
+└── README.md
+```
+
+### 5.2 Target Next.js structure
+
+```text
+src/frontend/
+├── app/                 # App Router: (public)/login, (workspace)/dashboard, anomalies/[anomalyId],
+│                        # changes, tickets/import, baseline, audit, settings, users, profile, forbidden
+├── features/            # auth, dashboard, anomalies, suggestions, changes, tickets,
+│                        # baseline, audit, settings, users, profile (components/, hooks/, api.ts)
+├── components/          # Shared UI
+├── lib/                 # api-client, api-types (from OpenAPI), formatting
+├── middleware.ts        # Login and role redirects
+├── tests/
+└── .env.example
+```
+
+```text
+app/ route → feature component → feature hook → feature api.ts → api-client → REST API
+```
+
+### 5.3 Target FastAPI modular structure
+
+```text
+src/backend/
+├── app/
+│   ├── main.py  worker.py  api_router.py
+│   ├── core/            # config, database, security, container (DI), deps, errors
+│   ├── modules/         # auth, users, settings, changes, tickets, logs, integration,
+│   │   └── <module>/    # baseline, anomalies, suggestions, dashboard, audit, jobs
+│   │       ├── router.py        # controller, exposed through api_router
+│   │       ├── service.py       # business logic, depends on interfaces
+│   │       ├── repository.py    # Protocol + SQLAlchemy implementation
+│   │       ├── models.py  schemas.py  dependencies.py
+│   └── ai/              # LLMClient interface, llm_client, masking, evidence, generator, validator
+├── tests/               # fakes/, modules/, ai/
+├── alembic/
+├── .env.example
+├── requirements.txt
+└── Dockerfile           # one image: api or worker
+```
+
+```text
+api_router → module/router → module/service → repository interface → PostgreSQL
+worker → module/service or ai/ → repository → PostgreSQL
+```
+
+Modules call each other only through services; implementations are injected from `core/container.py`, so tests swap them for fakes.
+
+Module ownership, rules, and environment variables: [Target Folder Structure](docs/07-folder-structure.md).
+
 ## Documentation
 
 - Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
 - Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
 - Architecture: [C4 model](docs/architecture/c4/README.md).
+- Folder structure: [Next.js and FastAPI modules](docs/07-folder-structure.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
 
@@ -538,6 +605,7 @@ The REST contract is defined with OpenAPI 3.0 and derived from the use cases and
 - [x] Design the C4 System Context, Container, and Component views
 - [x] Design the database schema and data relationships
 - [x] Write the API documentation in OpenAPI 3.0
+- [x] Design the Next.js frontend and FastAPI backend folder structure
 - [ ] Design class diagrams and sequence diagrams
 - [ ] Build the UI prototype for each role
 - [ ] Build the backend and connect the frontend to the API
