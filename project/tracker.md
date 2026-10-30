@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | [PLT-1](screens/PLT-1.yaml) | Backend core | platform | M0 | — | — | 10/10 | `backend-design:think-before-coding`, `backend-design:error-handling-as-design`, `backend-design:security-discipline`, `backend-design:auth-and-authorization`, `backend-design:query-discipline`, `backend-design:testing-with-discernment`, `simplify`, `code-review` | ✅ |
 | 2 | [PLT-2](screens/PLT-2.yaml) | Database migration and seed | platform | M0 | — | PLT-1 | 4/4 | `backend-design:think-before-coding`, `backend-design:migration-safety`, `backend-design:data-modeling-discipline`, `backend-design:security-discipline`, `backend-design:testing-with-discernment`, `simplify`, `code-review` | ✅ |
-| 3 | [PLT-3](screens/PLT-3.yaml) | Frontend foundation and shell | platform | M0 | — | PLT-1 | 0/8 | — | ⬜ |
+| 3 | [PLT-3](screens/PLT-3.yaml) | Frontend foundation and shell | platform | M0 | — | PLT-1 | 8/8 | `simplify`, `code-review` | ✅ |
 | 4 | [PLT-4](screens/PLT-4.yaml) | CI and Docker | platform | M0 | — | PLT-2, PLT-3 | 0/6 | — | ⬜ |
 | 5 | [SCR-01](screens/SCR-01.yaml) | Login and logout | screen | M1 | SCR-01 | PLT-4 | 0/9 | — | ⬜ |
 | 6 | [SCR-90](screens/SCR-90.yaml) | Forbidden | screen | M1 | SCR-90 | SCR-01 | 0/3 | — | ⬜ |
@@ -43,7 +43,7 @@
 
 | Milestone | Items | Done |
 |---|---|---|
-| M0 | 4 | 2 |
+| M0 | 4 | 3 |
 | M1 | 3 | 0 |
 | M2 | 2 | 0 |
 | M3 | 4 | 0 |
@@ -51,7 +51,7 @@
 | M5 | 3 | 0 |
 | M6 | 2 | 0 |
 | AI | 4 | 0 |
-| **Total** | **27** | **2** |
+| **Total** | **27** | **3** |
 
 ## Stories
 

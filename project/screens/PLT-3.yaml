@@ -5,7 +5,7 @@ track: main
 milestone: M0
 order: 3
 depends_on: [PLT-1]
-status: todo
+status: done
 roles: {}
 stories: []
 acceptance: []
@@ -33,16 +33,18 @@ frontend:
     - app/(workspace)/layout.tsx
 tasks:
   frontend:
-    - "[ ] Generate lib/api-types.ts with npm run api:types"
-    - "[ ] api-client: base URL, JWT header, 401 to login, 403 to forbidden, problem+json"
-    - "[ ] format.ts: UTC in, viewer time zone out"
-    - "[ ] proxy.ts: redirect by login state and role"
-    - "[ ] Workspace layout with role-filtered sidebar and topbar"
-    - "[ ] Shared skeleton, empty and error components from shadcn/ui"
+    - "[x] Generate lib/api-types.ts with npm run api:types"
+    - "[x] api-client: base URL, JWT header, 401 to login, 403 to forbidden, problem+json"
+    - "[x] format.ts: UTC in, viewer time zone out"
+    - "[x] proxy.ts: redirect by login state and role"
+    - "[x] Workspace layout with role-filtered sidebar and topbar"
+    - "[x] Shared skeleton, empty and error components from shadcn/ui"
   tests:
-    - "[ ] api-client handles 401, 403, problem+json"
-    - "[ ] Sidebar renders only permitted items per role"
+    - "[x] api-client handles 401, 403, problem+json"
+    - "[x] Sidebar renders only permitted items per role"
 done_when:
   - A placeholder page renders inside the shell with role-filtered navigation
-skills_used: []
+skills_used:
+  - simplify
+  - code-review
 open: []
