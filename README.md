@@ -582,6 +582,428 @@ Modules call each other only through services; implementations are injected from
 
 Module ownership, rules, and environment variables: [Target Folder Structure](docs/07-folder-structure.md).
 
+## 6. Detailed Class and Sequence Design
+
+Detailed design derives from the C4 components (section 3), the database and OpenAPI contracts (section 4), and the module structure (section 5). Names are Python classes inside the FastAPI modules; these are target design views.
+
+### 6.1 C4 Level 4 — Code collaboration
+
+The two core features: **Suspect Ranking** (rule-based, no LLM) and **Suggested Resolution** (LLM with evidence validation). Both run in the worker; users read the results through the API.
+
+#### L4.1 Suspect Ranking
+
+```mermaid
+flowchart TB
+    subgraph ranking["modules/anomalies [Module]"]
+        direction TB
+        router["anomalies.router<br/><i>[FastAPI router]</i><br/>list_suspects, submit_feedback"]
+        detect["AnomalyDetectionService<br/><i>[Python class]</i><br/>Compares ticket counts with the<br/>active baseline, creates anomalies"]
+        rank["SuspectRankingService<br/><i>[Python class]</i><br/>Finds changes in the tracing window,<br/>scores them, stores ranked suspects"]
+        scorer["SuspectScorer<br/><i>[Python class, pure]</i><br/>Five factors × weights → score 0–100,<br/>level, explanation per factor"]
+        repo["SuspectRepository / AnomalyRepository<br/><i>[Protocol]</i><br/>replace_for_anomaly, list_by_anomaly"]
+        impl["SqlAlchemySuspectRepository<br/><i>[Python class]</i><br/>Implements the Protocol with SQL"]
+        detect --> rank
+        rank --> scorer
+        rank --> repo
+        router --> repo
+        impl -.->|"implements"| repo
+    end
+
+    worker["worker.py<br/><i>[Job runner]</i>"]
+    baseline["BaselineService<br/><i>[modules/baseline]</i>"]
+    tickets["TicketService<br/><i>[modules/tickets]</i>"]
+    changes["ChangeService<br/><i>[modules/changes]</i>"]
+    logs["LogService<br/><i>[modules/logs]</i>"]
+    jobs["JobService<br/><i>[modules/jobs]</i>"]
+    db[("PostgreSQL")]
+
+    worker --> detect
+    detect --> baseline
+    detect --> tickets
+    rank --> changes
+    rank --> logs
+    rank -->|"enqueue SUGGESTION_GENERATION"| jobs
+    impl --> db
+
+    style scorer fill:#0b4f9e,color:#fff
+    style rank fill:#0b4f9e,color:#fff
+    style detect fill:#1168bd,color:#fff
+    style router fill:#1168bd,color:#fff
+    style repo fill:#1168bd,color:#fff
+    style impl fill:#1168bd,color:#fff
+```
+
+#### L4.2 Suggested Resolution
+
+```mermaid
+flowchart TB
+    subgraph sugg["modules/suggestions [Module]"]
+        direction TB
+        router["suggestions.router<br/><i>[FastAPI router]</i><br/>get_suggested_resolution,<br/>confirm_suggested_resolution"]
+        service["SuggestionService<br/><i>[Python class]</i><br/>generate (worker), get_current,<br/>decide (confirm / reject)"]
+        policy["SuggestionPolicy<br/><i>[Python class]</i><br/>Only IT Manager, Change Engineer,<br/>Admin may decide"]
+        repo["SuggestionRepository<br/><i>[Protocol]</i><br/>next_version, add, get_current, update"]
+        impl["SqlAlchemySuggestionRepository<br/><i>[Python class]</i>"]
+        router --> service
+        service --> policy
+        service --> repo
+        impl -.->|"implements"| repo
+    end
+
+    subgraph ai["ai/ [Package]"]
+        direction TB
+        collector["EvidenceCollector<br/>Logs, tickets, change, rollback plan,<br/>confirmed past incidents, guidelines"]
+        masker["Masker<br/>Removes names, e-mails, IPs, paths"]
+        generator["SuggestionGenerator<br/>Builds the prompt, parses the draft"]
+        llm["LLMClient<br/><i>[Protocol]</i>"]
+        provider["AnthropicLLMClient<br/>Implements LLMClient"]
+        validator["EvidenceValidator<br/>Drops uncited causes,<br/>sets basis and label"]
+        collector --> masker --> generator --> llm
+        provider -.->|"implements"| llm
+        generator --> validator
+    end
+
+    worker["worker.py"]
+    db[("PostgreSQL")]
+    ext["LLM Provider"]
+
+    worker --> service
+    service --> collector
+    service --> generator
+    service --> validator
+    impl --> db
+    provider --> ext
+
+    style service fill:#0b4f9e,color:#fff
+    style validator fill:#0b4f9e,color:#fff
+    style router fill:#1168bd,color:#fff
+    style policy fill:#1168bd,color:#fff
+    style repo fill:#1168bd,color:#fff
+    style impl fill:#1168bd,color:#fff
+```
+
+Source: [C4 Level 4 — Code](docs/architecture/c4/04-code.md)
+
+### 6.2 Core class diagrams
+
+#### 1. Change Management
+
+```mermaid
+classDiagram
+    direction TB
+
+    class ChangesRouter {
+        <<router>>
+        +list_changes(filters, page, user) Page~ChangeRead~
+        +get_change(change_id, user) ChangeRead
+        +create_change(body: ChangeCreate, user) ChangeRead
+        +update_change(change_id, body: ChangeCreate, user) ChangeRead
+        +update_change_status(change_id, body: StatusUpdate, user) ChangeRead
+    }
+    class ChangeCreate {
+        <<Pydantic>>
+        +type: ChangeType
+        +title: str
+        +start_at: datetime
+        +end_at: Optional~datetime~
+        +scope: ScopeIn
+        +implementer_id: UUID
+        +rollback_plan: RollbackPlanIn
+        +status: ChangeStatus
+    }
+    class ScopeIn {
+        <<Pydantic>>
+        +departments: list~str~
+        +branches: list~str~
+        +software: list~str~
+        +device_groups: list~str~
+    }
+    class ChangeService {
+        -repo: ChangeRepository
+        -policy: ChangePolicy
+        -validator: ChangeValidator
+        -lookups: LookupService
+        -audit: AuditService
+        +create(data, actor) ChangeRead
+        +update(change_id, data, actor) ChangeRead
+        +update_status(change_id, status, note, actor) ChangeRead
+        +find_in_window(start, end) list~Change~
+    }
+    class ChangePolicy {
+        +ensure_can_create(actor) None
+        +ensure_can_edit(actor, change) None
+    }
+    class ChangeValidator {
+        +validate(data, scope_ids) None
+    }
+    class LookupService {
+        +resolve_scope(scope: ScopeIn) ScopeIds
+    }
+    class ChangeRepository {
+        <<Protocol>>
+        +add(change) Change
+        +get(change_id) Optional~Change~
+        +update(change) Change
+        +list(filters, page) Page~Change~
+        +started_between(start, end) list~Change~
+    }
+    class SqlAlchemyChangeRepository {
+        -session: Session
+    }
+    class Change {
+        <<SQLAlchemy>>
+        +id: UUID
+        +type: ChangeType
+        +start_at: datetime
+        +status: ChangeStatus
+        +implementer_id: UUID
+        +rollback_available: bool
+        +rollback_steps: Optional~str~
+        +departments: list~Department~
+        +branches: list~Branch~
+        +software: list~Software~
+        +device_groups: list~DeviceGroup~
+    }
+    class AuditService {
+        +record(action, object_type, object_id, actor, details) None
+    }
+
+    ChangesRouter --> ChangeService
+    ChangesRouter ..> ChangeCreate
+    ChangeCreate *-- ScopeIn
+    ChangeService --> ChangeRepository
+    ChangeService --> ChangePolicy
+    ChangeService --> ChangeValidator
+    ChangeService --> LookupService
+    ChangeService --> AuditService
+    SqlAlchemyChangeRepository ..|> ChangeRepository
+    SqlAlchemyChangeRepository --> Change
+```
+
+#### 2. Suspect Ranking
+
+```mermaid
+classDiagram
+    direction TB
+
+    class AnomaliesRouter {
+        <<router>>
+        +list_anomalies(filters, page, user) Page~AnomalyRead~
+        +get_anomaly(anomaly_id, user) AnomalyRead
+        +list_suspects(anomaly_id, user) list~SuspectRead~
+        +list_anomaly_logs(anomaly_id, page, user) Page~ErrorLogGroup~
+        +submit_suspect_feedback(suspect_id, body, user) None
+    }
+    class AnomalyDetectionService {
+        -baseline: BaselineService
+        -tickets: TicketService
+        -anomalies: AnomalyRepository
+        -settings: SettingsService
+        +detect(now) list~Anomaly~
+    }
+    class SuspectRankingService {
+        -changes: ChangeService
+        -logs: LogService
+        -scorer: SuspectScorer
+        -suspects: SuspectRepository
+        -jobs: JobService
+        +rank(anomaly) list~Suspect~
+    }
+    class SuspectScorer {
+        <<pure>>
+        +score(anomaly, change, context, weights) ScoreResult
+        -time_proximity(anomaly, change) FactorScore
+        -scope_match(anomaly, change) FactorScore
+        -category_keyword_match(anomaly, change) FactorScore
+        -anomaly_magnitude(anomaly) FactorScore
+        -change_risk(change) FactorScore
+    }
+    class ScoreResult {
+        +score: int
+        +level: Severity
+        +factors: list~FactorScore~
+    }
+    class FactorScore {
+        +factor: ScoreFactor
+        +contribution: float
+        +explanation: str
+    }
+    class Weights {
+        +time_proximity: float
+        +scope_match: float
+        +category_keyword: float
+        +anomaly_magnitude: float
+        +change_risk: float
+    }
+    class AnomalyRepository {
+        <<Protocol>>
+        +add(anomaly, ticket_ids, log_ids) Anomaly
+        +get(anomaly_id) Optional~Anomaly~
+        +list(filters, page) Page~Anomaly~
+    }
+    class SuspectRepository {
+        <<Protocol>>
+        +replace_for_anomaly(anomaly_id, results) list~Suspect~
+        +list_by_anomaly(anomaly_id) list~Suspect~
+        +save_feedback(suspect_id, user_id, verdict, note) None
+    }
+    class Anomaly {
+        <<SQLAlchemy>>
+        +id: UUID
+        +category_id: UUID
+        +department_id: UUID
+        +start_at: datetime
+        +actual_count: int
+        +expected_count: Decimal
+        +severity: Severity
+    }
+    class Suspect {
+        <<SQLAlchemy>>
+        +id: UUID
+        +anomaly_id: UUID
+        +change_id: UUID
+        +rank: int
+        +score: int
+        +factors: list~SuspectFactor~
+    }
+
+    AnomaliesRouter --> AnomalyRepository
+    AnomaliesRouter --> SuspectRepository
+    AnomalyDetectionService --> AnomalyRepository
+    AnomalyDetectionService ..> SuspectRankingService : new anomaly
+    SuspectRankingService --> SuspectScorer
+    SuspectRankingService --> SuspectRepository
+    SuspectScorer ..> Weights
+    SuspectScorer ..> ScoreResult
+    ScoreResult *-- FactorScore
+    AnomalyRepository ..> Anomaly
+    SuspectRepository ..> Suspect
+```
+
+#### 3. Suggested Resolution
+
+```mermaid
+classDiagram
+    direction TB
+
+    class SuggestionsRouter {
+        <<router>>
+        +get_suggested_resolution(suspect_id, user) SuggestionRead
+        +confirm_suggested_resolution(suspect_id, body: DecisionIn, user) SuggestionRead
+    }
+    class SuggestionService {
+        -repo: SuggestionRepository
+        -policy: SuggestionPolicy
+        -collector: EvidenceCollector
+        -generator: SuggestionGenerator
+        -validator: EvidenceValidator
+        -audit: AuditService
+        +generate(suspect_id) Suggestion
+        +get_current(suspect_id) SuggestionRead
+        +decide(suspect_id, decision, note, actor) SuggestionRead
+    }
+    class SuggestionPolicy {
+        +ensure_can_decide(actor) None
+        +ensure_confirmable(suggestion) None
+    }
+    class SuggestionRepository {
+        <<Protocol>>
+        +next_version(suspect_id) int
+        +add(suggestion) Suggestion
+        +get_current(suspect_id) Optional~Suggestion~
+        +update(suggestion) Suggestion
+    }
+    class EvidenceCollector {
+        +collect(suspect_id) EvidenceBundle
+    }
+    class EvidenceBundle {
+        +logs: list~LogEvidence~
+        +tickets: list~TicketEvidence~
+        +change: ChangeEvidence
+        +past_incidents: list~PastIncident~
+        +guidelines: list~Guideline~
+    }
+    class Masker {
+        +mask(text) str
+    }
+    class SuggestionGenerator {
+        -llm: LLMClient
+        -masker: Masker
+        +draft(bundle) Draft
+    }
+    class LLMClient {
+        <<Protocol>>
+        +complete(prompt, timeout) str
+    }
+    class AnthropicLLMClient {
+        -api_key: str
+        -model: str
+    }
+    class EvidenceValidator {
+        <<pure>>
+        +validate(draft, bundle) ValidatedSuggestion
+    }
+    class Draft {
+        +causes: list~DraftStatement~
+        +steps: list~DraftStatement~
+    }
+    class DraftStatement {
+        +text: str
+        +basis: StatementBasis
+        +evidence: list~EvidenceRef~
+    }
+    class ValidatedSuggestion {
+        +status: SuggestionStatus
+        +label: SuggestionLabel
+        +causes: list~DraftStatement~
+        +steps: list~DraftStatement~
+    }
+    class Suggestion {
+        <<SQLAlchemy>>
+        +id: UUID
+        +suspect_id: UUID
+        +version: int
+        +status: SuggestionStatus
+        +label: SuggestionLabel
+        +decision: Optional~SuggestionDecision~
+        +statements: list~SuggestionStatement~
+    }
+
+    SuggestionsRouter --> SuggestionService
+    SuggestionService --> SuggestionRepository
+    SuggestionService --> SuggestionPolicy
+    SuggestionService --> EvidenceCollector
+    SuggestionService --> SuggestionGenerator
+    SuggestionService --> EvidenceValidator
+    EvidenceCollector ..> EvidenceBundle
+    SuggestionGenerator --> Masker
+    SuggestionGenerator --> LLMClient
+    AnthropicLLMClient ..|> LLMClient
+    SuggestionGenerator ..> Draft
+    Draft *-- DraftStatement
+    EvidenceValidator ..> ValidatedSuggestion
+    SuggestionRepository ..> Suggestion
+```
+
+Authentication, enums, validator rules, and mapping boundaries: [Class diagrams](docs/architecture/uml/01-class-diagrams.md).
+
+### 6.3 Sequence diagrams
+
+Seven runtime sequences map each user story and OpenAPI operation to its router, service, policy/validator, repository, database interaction, and error paths:
+
+| # | Flow | Trigger |
+|---|---|---|
+| 1 | Login | `POST /auth/login` |
+| 2 | Create and edit a change (own-record rule) | `POST /changes`, `PUT /changes/{changeId}` |
+| 3 | Ingest error logs (masking, idempotency) | `POST /integration/logs` |
+| 4 | Detect anomaly and rank suspects | Scheduled worker job |
+| 5 | Generate suggested resolution (LLM, validation) | `SUGGESTION_GENERATION` job |
+| 6 | Review anomaly, suspects, and suggestion | `GET /anomalies/{id}/suspects`, `GET /suspects/{id}/suggestion` |
+| 7 | Confirm or reject a suggestion | `PUT /suspects/{id}/suggestion/confirmation` |
+
+- [Sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md)
+- [Detailed UML overview](docs/architecture/uml/README.md)
+
 ## Documentation
 
 - Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
@@ -589,6 +1011,7 @@ Module ownership, rules, and environment variables: [Target Folder Structure](do
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
 - Architecture: [C4 model](docs/architecture/c4/README.md).
 - Folder structure: [Next.js and FastAPI modules](docs/07-folder-structure.md).
+- Code-level design: [C4 Level 4](docs/architecture/c4/04-code.md), [class diagrams](docs/architecture/uml/01-class-diagrams.md), [sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
 
@@ -606,6 +1029,6 @@ Module ownership, rules, and environment variables: [Target Folder Structure](do
 - [x] Design the database schema and data relationships
 - [x] Write the API documentation in OpenAPI 3.0
 - [x] Design the Next.js frontend and FastAPI backend folder structure
-- [ ] Design class diagrams and sequence diagrams
+- [x] Design class diagrams and sequence diagrams
 - [ ] Build the UI prototype for each role
 - [ ] Build the backend and connect the frontend to the API
