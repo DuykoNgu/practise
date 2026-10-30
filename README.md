@@ -104,22 +104,77 @@ The information architecture organizes the authenticated workspace by business c
 
 ### 2.1 Information architecture
 
-```text
-Public
-└── Login
+An information architecture is more than a list of pages. CIC defines it through four systems — organization, labeling, navigation, and hierarchy — following the classic IA model (Rosenfeld & Morville).
 
-Authenticated
-├── Dashboard
-├── Anomalies
-├── Changes
-├── Tickets
-├── Baseline
-├── Audit
-├── Settings
-├── Users
-├── Profile
-└── Forbidden
+**Organization scheme.** Pages are grouped by the *job the user is doing*, not by database table: **Monitor** (what is wrong now), **Records** (the data that explains it), **Analysis** (what normal looks like), and **Administration** (who and how the system is configured). Inside a group, items are organized by object (Change, Ticket, Anomaly).
+
+**Site map.** Level 0 is the product, level 1 is a navigation group, level 2 is a page, level 3 is a section or modal inside a page.
+
+```text
+CIC
+├── Public
+│   └── Login
+│
+└── Authenticated workspace (shell: sidebar + topbar)
+    │
+    ├── MONITOR
+    │   ├── Dashboard
+    │   │   ├── Open anomalies
+    │   │   ├── Tickets versus baseline
+    │   │   └── Top suspects
+    │   └── Anomalies
+    │       ├── Anomaly list (filter by group, time, severity)
+    │       └── Anomaly detail
+    │           ├── Ranked suspects (score + explanation)
+    │           ├── Related tickets
+    │           ├── Timeline (changes and tickets)
+    │           └── Suspect feedback
+    │
+    ├── RECORDS
+    │   ├── Changes
+    │   │   ├── Change list
+    │   │   ├── Add / edit change (modal)
+    │   │   └── Change detail (modal: scope, implementer, rollback plan)
+    │   └── Tickets
+    │       ├── Ticket list
+    │       ├── Add ticket (modal)
+    │       └── Import (preview, history)
+    │
+    ├── ANALYSIS
+    │   └── Baseline
+    │       ├── Baseline versus actual chart
+    │       └── Recompute
+    │
+    ├── ADMINISTRATION
+    │   ├── Audit log
+    │   ├── Settings
+    │   │   ├── Thresholds and tracing window
+    │   │   ├── Ranking weights
+    │   │   └── Categories and scope mappings
+    │   └── Users
+    │       └── Add / edit user (modal)
+    │
+    ├── UTILITY (topbar)
+    │   ├── Profile (Account · Security · Roles & permissions)
+    │   ├── Time range and time zone
+    │   └── Log out
+    │
+    └── System page
+        └── 403 Forbidden
 ```
+
+**Navigation model.**
+
+| Layer | Where | Content |
+|---|---|---|
+| Global | Sidebar | The four groups and their level-2 pages; groups with no permitted page are hidden |
+| Utility | Topbar | Profile, time range / time zone, logout |
+| Local | Tabs inside a page | Anomaly detail (Suspects · Related tickets · Timeline), Settings, Profile |
+| Contextual | Links inside content | Suspect → change detail; change detail → anomalies it is suspected in; ticket → anomaly it belongs to |
+
+**Labeling.** Labels use the user's vocabulary and one term per concept: *Change* (never "modification"), *Ticket*, *Anomaly*, *Suspect*, *Baseline*. A suspect always shows its score as a number plus a High / Medium / Low label.
+
+**Role scope.** Every level-2 page declares which roles can see it (see [page permissions](docs/04-information-architecture.md#page-permissions)). Unauthorized pages are not rendered in the sidebar, and direct access resolves to 403.
 
 ### 2.2 Screen hierarchy
 
