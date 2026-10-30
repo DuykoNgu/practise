@@ -31,7 +31,7 @@ A screen or slice in [screens/](screens/README.md) is ✅ only when every item h
 
 **Bookkeeping**
 - [ ] Committed and pushed with a progress note in the message.
-- [ ] Item YAML tasks ticked and status set; `python project/tools/check_screens.py --write` passes and regenerated [tracker.md](tracker.md).
+- [ ] Item YAML tasks ticked, `skills_used` filled with the skills actually loaded, and status set; `python project/tools/check_screens.py --write` passes and regenerated [tracker.md](tracker.md).
 - [ ] New decisions added to [decisions.md](decisions.md); new risks or questions to [risks-and-questions.md](risks-and-questions.md).
 
 ## AI item

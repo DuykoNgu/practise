@@ -46,4 +46,5 @@ tasks:
     - "[ ] Roles, feedback, no-suspect state"
 done_when:
   - AC-UC14 and AC-UC15 pass
+skills_used: []
 open: []

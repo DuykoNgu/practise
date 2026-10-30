@@ -65,8 +65,8 @@ Then run `simplify` and `code-review` on the diff and apply what they find. Chec
 
 In the same commit as the code:
 
-1. In the item YAML, tick finished `tasks` (`[x]`) and set `status: done` (or `review` if something remains, with the reason).
+1. In the item YAML, tick finished `tasks` (`[x]`), list in `skills_used` every skill you actually loaded for this item (exact names, e.g. `backend-design:think-before-coding`, `frontend-design:frontend-design`, `simplify`, `code-review`), and set `status: done` (or `review` if something remains, with the reason).
 2. Run `python project/tools/check_screens.py --write` to regenerate `project/tracker.md`; it must pass.
 3. Add new decisions to `project/decisions.md`; new risks, questions, or doc inconsistencies to `project/risks-and-questions.md`.
 
-Commit as `<ID>: <what was done>` plus a short progress note, push to the working branch, report what passed and what is left, and suggest `/compact` before the next item.
+Commit as `<ID>: <what was done>` plus a short progress note and a `Skills:` line with the same list, push to the working branch, report what passed, what is left, and which skills were used, and suggest `/compact` before the next item.

@@ -30,4 +30,5 @@ tasks:
     - "[ ] Upgrade on empty PostgreSQL 15+; seed runs twice without error"
 done_when:
   - alembic upgrade head and seed produce a working database
+skills_used: []
 open: [Q-11, Q-12]

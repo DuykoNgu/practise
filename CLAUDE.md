@@ -6,7 +6,7 @@ These rules apply to every coding task in this repository. They take precedence 
 
 - Work comes from the YAML files in [project/screens/](project/screens/README.md): one file per screen (frontend feature + backend modules) or non-screen slice (`PLT-*`, `API-*`, `JOB-*`, `AI-*`, `NFR-*`). They are the single source for route, roles, stories, acceptance, rules, API, tables, components, hooks, states, and tasks.
 - Start an item with `/implement <ID>`; it runs `python project/tools/check_screens.py`, then checks the item, `project/`, and `docs/` before any code.
-- Build one item at a time, in tracker order unless the user says otherwise. An item is done only when every task is ticked, its checks pass, and `check_screens.py --write` has regenerated `project/tracker.md`.
+- Build one item at a time, in tracker order unless the user says otherwise. An item is done only when every task is ticked, `skills_used` lists the skills actually loaded, its checks pass, and `check_screens.py --write` has regenerated `project/tracker.md`.
 - Only touch the frontend feature, backend modules, and `cic_ai` modules listed in the item. If anything else must change, ask the user first.
 - Shared code (`src/frontend/components/`, `src/frontend/lib/`, `src/backend/app/core/`) is added only when the current item needs it.
 - When a doc changes (OpenAPI, schema, IA, rules), run `check_screens.py` and update the affected YAML files in the same commit.

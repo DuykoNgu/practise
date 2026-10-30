@@ -37,4 +37,5 @@ tasks:
     - "[ ] Filters, empty states, roles"
 done_when:
   - All roles see open anomalies with filters
+skills_used: []
 open: []

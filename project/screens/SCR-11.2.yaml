@@ -39,4 +39,5 @@ tasks:
     - "[ ] Linking rules, grouping, retention, no-related-logs state"
 done_when:
   - AC-UC23 passes
+skills_used: []
 open: []

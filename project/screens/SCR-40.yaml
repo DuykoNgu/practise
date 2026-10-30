@@ -45,4 +45,5 @@ tasks:
     - "[ ] 09-algorithms baseline examples, concurrent job claim, role check"
 done_when:
   - AC-UC11 and AC-UC12 pass
+skills_used: []
 open: [Q-04]

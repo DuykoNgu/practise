@@ -58,6 +58,7 @@ COMMON_KEYS = (
     "backend",
     "tasks",
     "done_when",
+    "skills_used",
     "open",
 )
 SCREEN_KEYS = ("covers", "route", "presentation", "frontend")
@@ -65,6 +66,7 @@ FRONTEND_KEYS = ("feature", "components", "hooks", "states")
 BACKEND_KEYS = ("modules", "api", "tables", "jobs")
 AI_KEYS = ("modules", "cli", "datasets", "metrics")
 TASK_GROUPS = {"backend", "frontend", "ai", "tests"}
+SKILL_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*(:[a-z0-9][a-z0-9-]*)?$")
 
 
 @dataclass
@@ -205,6 +207,7 @@ def check_values(item_id: str, item: dict[str, Any], catalog: Catalog, report: R
         if metric not in catalog.metrics:
             report.add(item_id, f"metric {metric} not in ai-package.md")
     check_tasks(item_id, item, report)
+    check_skills(item_id, item, report)
 
 
 def check_docs(item_id: str, docs: list[str], report: Report) -> None:
@@ -262,6 +265,18 @@ def check_tasks(item_id: str, item: dict[str, Any], report: Report) -> None:
     unticked = [entry for entries in tasks.values() for entry in entries or [] if not str(entry).startswith("[x]")]
     if item["status"] == "done" and unticked:
         report.add(item_id, "status done but some tasks are not ticked")
+
+
+def check_skills(item_id: str, item: dict[str, Any], report: Report) -> None:
+    skills = item["skills_used"]
+    if not isinstance(skills, list):
+        report.add(item_id, "skills_used must be a list")
+        return
+    for skill in skills:
+        if not SKILL_PATTERN.match(str(skill)):
+            report.add(item_id, f"skill {skill!r} must look like name or plugin:name")
+    if item["status"] in {"review", "done"} and not skills:
+        report.add(item_id, f"status {item['status']} but skills_used is empty")
 
 
 def check_graph(items: dict[str, dict[str, Any]], report: Report) -> None:
@@ -345,15 +360,16 @@ def render_tracker(items: dict[str, dict[str, Any]], catalog: Catalog) -> str:
         lines += [
             f"## {title}",
             "",
-            "| Order | ID | Name | Kind | Milestone | Covers | Depends on | Tasks | Status |",
-            "|---|---|---|---|---|---|---|---|---|",
+            "| Order | ID | Name | Kind | Milestone | Covers | Depends on | Tasks | Skills used | Status |",
+            "|---|---|---|---|---|---|---|---|---|---|",
         ]
         for item in sorted((i for i in items.values() if i["track"] == track), key=lambda i: i["order"]):
             covers = ", ".join(item.get("covers") or []) or "—"
             depends = ", ".join(item["depends_on"]) or "—"
+            skills = ", ".join(f"`{skill}`" for skill in item["skills_used"]) or "—"
             lines.append(
                 f"| {item['order']} | [{item['id']}](screens/{item['id']}.yaml) | {item['name']} | {item['kind']} "
-                f"| {item['milestone']} | {covers} | {depends} | {tasks_progress(item)} | {STATUSES[item['status']]} |"
+                f"| {item['milestone']} | {covers} | {depends} | {tasks_progress(item)} | {skills} | {STATUSES[item['status']]} |"
             )
         lines.append("")
     lines += ["## Progress", "", "| Milestone | Items | Done |", "|---|---|---|"]

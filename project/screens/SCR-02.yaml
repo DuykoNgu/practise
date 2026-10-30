@@ -37,4 +37,5 @@ tasks:
     - "[ ] Filters and empty state"
 done_when:
   - AC-UC03 passes within NFR-PERF-003
+skills_used: []
 open: []

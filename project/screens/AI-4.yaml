@@ -32,4 +32,5 @@ tasks:
     - "[ ] Client unit tests with a mocked SDK response"
 done_when:
   - Live baseline recorded in project/decisions.md and live bars confirmed
+skills_used: []
 open: [Q-02, Q-08, Q-09]

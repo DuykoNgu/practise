@@ -35,4 +35,5 @@ tasks:
     - "[ ] Each role hitting a forbidden route lands here"
 done_when:
   - Every route in the IA page-permission table is enforced in the UI
+skills_used: []
 open: [I-04]

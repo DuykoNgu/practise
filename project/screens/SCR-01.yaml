@@ -46,4 +46,5 @@ tasks:
     - "[ ] Form validation and error states"
 done_when:
   - AC-UC01 and AC-UC02 pass for all four roles
+skills_used: []
 open: [Q-15]

@@ -47,6 +47,7 @@ Every unit of work is one YAML file in this folder: a **screen** (frontend featu
 | `ai.modules` / `ai.cli` / `ai.datasets` / `ai.metrics` | ai | Parts of [`cic_ai`](../../docs/architecture/ai-package.md); metric ids `M-*` |
 | `tasks.backend` / `tasks.frontend` / `tasks.ai` / `tests` | yes | Strings starting with `[ ]` or `[x]` |
 | `done_when` | yes | Observable results that close the item |
+| `skills_used` | yes | Skills actually loaded while building the item (`name` or `plugin:name`), filled in by `/implement`; required once status is `review` or `done` |
 | `open` | yes | `Q-*` / `I-*` ids from [risks-and-questions.md](../risks-and-questions.md) that shape the item |
 
 ## State vocabulary
@@ -59,7 +60,7 @@ From the [UI/UX state contract](../../docs/04-information-architecture.md#uiux-s
 |---|---|
 | Schema | A required key is missing, a value is outside its vocabulary, or `id` differs from the file name |
 | Order | Two items share an order in a track; a dependency is missing, later in order, or forms a cycle |
-| Status | `done` with an unticked task; `in_progress`/`done` while a dependency is not `done` |
+| Status | `done` with an unticked task; `in_progress`/`done` while a dependency is not `done`; `review`/`done` with an empty `skills_used` |
 | Docs ids | A story, AC, BR, NFR, metric, question, or IA screen id does not exist in the docs |
 | Contract | An API path is not in openapi.yaml, a table or job type is not in cic.sql, a module or feature is not in 07-folder-structure.md, a doc path does not exist |
 | Coverage | A user story, OpenAPI operation, table, IA screen, or backend module is not covered by any item |

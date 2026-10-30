@@ -47,4 +47,5 @@ tasks:
     - "[ ] Non-admin 403, duplicate email, disabled user cannot log in, audit written"
 done_when:
   - AC-UC18 passes
+skills_used: []
 open: []

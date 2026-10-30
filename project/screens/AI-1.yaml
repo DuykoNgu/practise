@@ -34,4 +34,5 @@ tasks:
     - "[ ] Masker unit tests; coverage >= 90%"
 done_when:
   - cic-ai eval masking passes M-MASK-01 = 1.00 and M-MASK-02 = 0
+skills_used: []
 open: []

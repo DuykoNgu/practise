@@ -30,4 +30,5 @@ tasks:
     - "[ ] Key checks, batch limit, duplicates, partial rejections, 1,000-item timing"
 done_when:
   - AC-UC10 passes and records appear on SCR-20 and SCR-30
+skills_used: []
 open: [Q-03, Q-12]

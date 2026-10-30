@@ -52,4 +52,5 @@ tasks:
     - "[ ] cic-ai eval suggestion still passes"
 done_when:
   - AC-UC20 and AC-UC21 pass
+skills_used: []
 open: [Q-02, Q-13]

@@ -41,4 +41,5 @@ tasks:
     - "[ ] Filters, role checks, validation"
 done_when:
   - AC-UC07 and AC-UC08 pass
+skills_used: []
 open: []

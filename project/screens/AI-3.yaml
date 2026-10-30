@@ -34,4 +34,5 @@ tasks:
     - "[ ] Every EvidenceValidator rule has a test; validator coverage >= 90%"
 done_when:
   - cic-ai eval all passes every stub bar in CI
+skills_used: []
 open: [Q-10]

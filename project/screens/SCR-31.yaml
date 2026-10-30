@@ -44,4 +44,5 @@ tasks:
     - "[ ] Size and row limits, invalid rows block submit, atomic rollback, history"
 done_when:
   - AC-UC09 passes
+skills_used: []
 open: []

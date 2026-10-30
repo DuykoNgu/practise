@@ -37,7 +37,7 @@ Hoặc chỉ gõ `/implement` để agent tự chọn mục tiếp theo.
 | 4. Đối chiếu docs | Đọc AC, BR, NFR, OpenAPI, SQL, IA, sơ đồ | Docs mâu thuẫn hoặc thiếu |
 | 5. Code | Backend → frontend → test, viết tóm tắt trước khi code | Cần sửa ngoài phạm vi mục |
 | 6. Kiểm tra | Lint, type check, test, build, `simplify`, `code-review` | — (tự sửa đến khi qua) |
-| 7. Ghi lại | Tick task trong YAML, sinh lại tracker, commit `<ID>: ...`, push | — |
+| 7. Ghi lại | Tick task, ghi các skill đã dùng vào `skills_used`, sinh lại tracker (có cột Skills used), commit `<ID>: ...` kèm dòng `Skills:`, push | — |
 
 ## 4. Việc của bạn sau mỗi mục
 

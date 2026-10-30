@@ -49,4 +49,5 @@ tasks:
     - "[ ] Role x action matrix, own-record rule, scope and rollback validation, conflict, audit"
 done_when:
   - AC-UC04, AC-UC05 and AC-UC06 pass
+skills_used: []
 open: []

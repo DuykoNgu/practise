@@ -37,4 +37,5 @@ tasks:
     - "[ ] Role checks; every BR-021 action appears"
 done_when:
   - AC-UC16 passes
+skills_used: []
 open: []

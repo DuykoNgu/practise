@@ -32,4 +32,5 @@ tasks:
     - "[ ] Classifier unit tests"
 done_when:
   - cic-ai eval classification passes all M-CLS bars
+skills_used: []
 open: []

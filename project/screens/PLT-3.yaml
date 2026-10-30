@@ -44,4 +44,5 @@ tasks:
     - "[ ] Sidebar renders only permitted items per role"
 done_when:
   - A placeholder page renders inside the shell with role-filtered navigation
+skills_used: []
 open: []

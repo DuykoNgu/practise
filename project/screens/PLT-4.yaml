@@ -31,4 +31,5 @@ tasks:
     - "[ ] CI green on main"
 done_when:
   - CI is green on main and the image starts as api and worker
+skills_used: []
 open: [Q-06]

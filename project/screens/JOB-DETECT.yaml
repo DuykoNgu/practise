@@ -35,4 +35,5 @@ tasks:
     - "[ ] Every edge case of 09-algorithms section 6; weights from settings; SuspectScorer coverage >= 90%"
 done_when:
   - AC-UC13 passes with seeded data within NFR-TIME-001 and NFR-TIME-002
+skills_used: []
 open: []

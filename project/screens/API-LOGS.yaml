@@ -38,4 +38,5 @@ tasks:
     - "[ ] Key checks, batch limit, duplicates, masking applied, classification job, 1,000-log timing"
 done_when:
   - AC-UC22 passes
+skills_used: []
 open: [I-06, Q-12]

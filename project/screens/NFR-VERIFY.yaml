@@ -30,4 +30,5 @@ tasks:
     - "[ ] Every verification id in non-functional-requirements.md passes and is recorded in decisions.md"
 done_when:
   - Every NFR verification passes under the reference workload
+skills_used: []
 open: [Q-06]

@@ -47,4 +47,5 @@ tasks:
     - "[ ] Error mapping, JWT expiry, hashing, role-check dependency"
 done_when:
   - API starts, health returns OK, ruff, mypy and pytest pass
+skills_used: []
 open: []

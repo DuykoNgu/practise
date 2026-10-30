@@ -43,4 +43,5 @@ tasks:
     - "[ ] Role unchanged, wrong current password, short password, audit written"
 done_when:
   - AC-UC19 passes
+skills_used: []
 open: []

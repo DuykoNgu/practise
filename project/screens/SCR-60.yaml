@@ -45,4 +45,5 @@ tasks:
     - "[ ] Every BR-019 boundary, non-admin 403, audit written"
 done_when:
   - AC-UC17 passes
+skills_used: []
 open: [Q-11]

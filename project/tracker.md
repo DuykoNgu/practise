@@ -4,40 +4,40 @@
 
 ## Main track
 
-| Order | ID | Name | Kind | Milestone | Covers | Depends on | Tasks | Status |
-|---|---|---|---|---|---|---|---|---|
-| 1 | [PLT-1](screens/PLT-1.yaml) | Backend core | platform | M0 | — | — | 0/10 | ⬜ |
-| 2 | [PLT-2](screens/PLT-2.yaml) | Database migration and seed | platform | M0 | — | PLT-1 | 0/4 | ⬜ |
-| 3 | [PLT-3](screens/PLT-3.yaml) | Frontend foundation and shell | platform | M0 | — | PLT-1 | 0/8 | ⬜ |
-| 4 | [PLT-4](screens/PLT-4.yaml) | CI and Docker | platform | M0 | — | PLT-2, PLT-3 | 0/6 | ⬜ |
-| 5 | [SCR-01](screens/SCR-01.yaml) | Login and logout | screen | M1 | SCR-01 | PLT-4 | 0/9 | ⬜ |
-| 6 | [SCR-90](screens/SCR-90.yaml) | Forbidden | screen | M1 | SCR-90 | SCR-01 | 0/3 | ⬜ |
-| 7 | [SCR-80](screens/SCR-80.yaml) | Profile | screen | M1 | SCR-80 | SCR-90 | 0/6 | ⬜ |
-| 8 | [SCR-70](screens/SCR-70.yaml) | User management | screen | M2 | SCR-70 | SCR-80 | 0/6 | ⬜ |
-| 9 | [SCR-60](screens/SCR-60.yaml) | Settings | screen | M2 | SCR-60 | SCR-70 | 0/7 | ⬜ |
-| 10 | [SCR-20](screens/SCR-20.yaml) | Changes | screen | M3 | SCR-20, SCR-21, SCR-22 | SCR-60 | 0/7 | ⬜ |
-| 11 | [SCR-30](screens/SCR-30.yaml) | Tickets | screen | M3 | SCR-30 | SCR-20 | 0/4 | ⬜ |
-| 12 | [SCR-31](screens/SCR-31.yaml) | Ticket import | screen | M3 | SCR-31 | SCR-30 | 0/6 | ⬜ |
-| 13 | [API-ITSM](screens/API-ITSM.yaml) | ITSM integration | api | M3 | — | SCR-31 | 0/4 | ⬜ |
-| 14 | [SCR-40](screens/SCR-40.yaml) | Baseline | screen | M4 | SCR-40 | API-ITSM | 0/7 | ⬜ |
-| 15 | [JOB-DETECT](screens/JOB-DETECT.yaml) | Anomaly detection and suspect ranking | worker | M4 | — | SCR-40 | 0/5 | ⬜ |
-| 16 | [SCR-10](screens/SCR-10.yaml) | Anomaly list | screen | M4 | SCR-10 | JOB-DETECT | 0/3 | ⬜ |
-| 17 | [SCR-11.1](screens/SCR-11.1.yaml) | Anomaly detail — suspects | screen | M4 | SCR-11 | SCR-10 | 0/6 | ⬜ |
-| 18 | [SCR-02](screens/SCR-02.yaml) | Dashboard | screen | M4 | SCR-02 | SCR-11.1 | 0/3 | ⬜ |
-| 19 | [API-LOGS](screens/API-LOGS.yaml) | Error-log intake | api | M5 | — | SCR-02, AI-2 | 0/7 | ⬜ |
-| 20 | [SCR-11.2](screens/SCR-11.2.yaml) | Anomaly detail — related logs | screen | M5 | SCR-11 | API-LOGS | 0/4 | ⬜ |
-| 21 | [SCR-11.3](screens/SCR-11.3.yaml) | Anomaly detail — suggested resolution | screen | M5 | SCR-11 | SCR-11.2, AI-4 | 0/9 | ⬜ |
-| 22 | [SCR-50](screens/SCR-50.yaml) | Audit log | screen | M6 | SCR-50 | SCR-11.3 | 0/3 | ⬜ |
-| 23 | [NFR-VERIFY](screens/NFR-VERIFY.yaml) | NFR verification | verification | M6 | — | SCR-50 | 0/6 | ⬜ |
+| Order | ID | Name | Kind | Milestone | Covers | Depends on | Tasks | Skills used | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | [PLT-1](screens/PLT-1.yaml) | Backend core | platform | M0 | — | — | 0/10 | — | ⬜ |
+| 2 | [PLT-2](screens/PLT-2.yaml) | Database migration and seed | platform | M0 | — | PLT-1 | 0/4 | — | ⬜ |
+| 3 | [PLT-3](screens/PLT-3.yaml) | Frontend foundation and shell | platform | M0 | — | PLT-1 | 0/8 | — | ⬜ |
+| 4 | [PLT-4](screens/PLT-4.yaml) | CI and Docker | platform | M0 | — | PLT-2, PLT-3 | 0/6 | — | ⬜ |
+| 5 | [SCR-01](screens/SCR-01.yaml) | Login and logout | screen | M1 | SCR-01 | PLT-4 | 0/9 | — | ⬜ |
+| 6 | [SCR-90](screens/SCR-90.yaml) | Forbidden | screen | M1 | SCR-90 | SCR-01 | 0/3 | — | ⬜ |
+| 7 | [SCR-80](screens/SCR-80.yaml) | Profile | screen | M1 | SCR-80 | SCR-90 | 0/6 | — | ⬜ |
+| 8 | [SCR-70](screens/SCR-70.yaml) | User management | screen | M2 | SCR-70 | SCR-80 | 0/6 | — | ⬜ |
+| 9 | [SCR-60](screens/SCR-60.yaml) | Settings | screen | M2 | SCR-60 | SCR-70 | 0/7 | — | ⬜ |
+| 10 | [SCR-20](screens/SCR-20.yaml) | Changes | screen | M3 | SCR-20, SCR-21, SCR-22 | SCR-60 | 0/7 | — | ⬜ |
+| 11 | [SCR-30](screens/SCR-30.yaml) | Tickets | screen | M3 | SCR-30 | SCR-20 | 0/4 | — | ⬜ |
+| 12 | [SCR-31](screens/SCR-31.yaml) | Ticket import | screen | M3 | SCR-31 | SCR-30 | 0/6 | — | ⬜ |
+| 13 | [API-ITSM](screens/API-ITSM.yaml) | ITSM integration | api | M3 | — | SCR-31 | 0/4 | — | ⬜ |
+| 14 | [SCR-40](screens/SCR-40.yaml) | Baseline | screen | M4 | SCR-40 | API-ITSM | 0/7 | — | ⬜ |
+| 15 | [JOB-DETECT](screens/JOB-DETECT.yaml) | Anomaly detection and suspect ranking | worker | M4 | — | SCR-40 | 0/5 | — | ⬜ |
+| 16 | [SCR-10](screens/SCR-10.yaml) | Anomaly list | screen | M4 | SCR-10 | JOB-DETECT | 0/3 | — | ⬜ |
+| 17 | [SCR-11.1](screens/SCR-11.1.yaml) | Anomaly detail — suspects | screen | M4 | SCR-11 | SCR-10 | 0/6 | — | ⬜ |
+| 18 | [SCR-02](screens/SCR-02.yaml) | Dashboard | screen | M4 | SCR-02 | SCR-11.1 | 0/3 | — | ⬜ |
+| 19 | [API-LOGS](screens/API-LOGS.yaml) | Error-log intake | api | M5 | — | SCR-02, AI-2 | 0/7 | — | ⬜ |
+| 20 | [SCR-11.2](screens/SCR-11.2.yaml) | Anomaly detail — related logs | screen | M5 | SCR-11 | API-LOGS | 0/4 | — | ⬜ |
+| 21 | [SCR-11.3](screens/SCR-11.3.yaml) | Anomaly detail — suggested resolution | screen | M5 | SCR-11 | SCR-11.2, AI-4 | 0/9 | — | ⬜ |
+| 22 | [SCR-50](screens/SCR-50.yaml) | Audit log | screen | M6 | SCR-50 | SCR-11.3 | 0/3 | — | ⬜ |
+| 23 | [NFR-VERIFY](screens/NFR-VERIFY.yaml) | NFR verification | verification | M6 | — | SCR-50 | 0/6 | — | ⬜ |
 
 ## AI track
 
-| Order | ID | Name | Kind | Milestone | Covers | Depends on | Tasks | Status |
-|---|---|---|---|---|---|---|---|---|
-| 1 | [AI-1](screens/AI-1.yaml) | Package and masking | ai | AI | — | — | 0/6 | ⬜ |
-| 2 | [AI-2](screens/AI-2.yaml) | Log classification | ai | AI | — | AI-1 | 0/4 | ⬜ |
-| 3 | [AI-3](screens/AI-3.yaml) | Suggestion pipeline in stub mode | ai | AI | — | AI-2 | 0/5 | ⬜ |
-| 4 | [AI-4](screens/AI-4.yaml) | Live mode and baseline | ai | AI | — | AI-3 | 0/4 | ⬜ |
+| Order | ID | Name | Kind | Milestone | Covers | Depends on | Tasks | Skills used | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | [AI-1](screens/AI-1.yaml) | Package and masking | ai | AI | — | — | 0/6 | — | ⬜ |
+| 2 | [AI-2](screens/AI-2.yaml) | Log classification | ai | AI | — | AI-1 | 0/4 | — | ⬜ |
+| 3 | [AI-3](screens/AI-3.yaml) | Suggestion pipeline in stub mode | ai | AI | — | AI-2 | 0/5 | — | ⬜ |
+| 4 | [AI-4](screens/AI-4.yaml) | Live mode and baseline | ai | AI | — | AI-3 | 0/4 | — | ⬜ |
 
 ## Progress
 
