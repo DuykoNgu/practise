@@ -1,0 +1,49 @@
+id: SCR-01
+kind: screen
+name: Login and logout
+track: main
+milestone: M1
+order: 5
+depends_on: [PLT-4]
+status: todo
+covers: [SCR-01]
+route: (public)/login
+presentation: Page
+roles:
+  login: [PUBLIC]
+  logout: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: [US01, US02]
+acceptance: [AC-UC01, AC-UC02]
+rules: [BR-001, BR-021]
+nfr: [NFR-SEC-001, NFR-SEC-002, NFR-SEC-003, NFR-SEC-005]
+docs:
+  - docs/architecture/uml/02-sequence-diagrams.md#1-login--post-apiv1authlogin
+  - docs/architecture/uml/01-class-diagrams.md#1-authentication--modulesauth-modulesusers-coresecurity
+frontend:
+  feature: auth
+  components: [LoginForm, LogoutButton]
+  hooks: [useLogin, useLogout]
+  states: [validation-error, api-error, saving, unauthorized]
+backend:
+  modules: [auth, users, audit]
+  api:
+    - POST /auth/login
+    - POST /auth/logout
+  tables: [app_users, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] auth router, service, schemas per openapi.yaml"
+    - "[ ] Disabled users rejected; generic message for wrong email or password"
+    - "[ ] 5 failed attempts per account per 15 minutes returns 429 (after Q-15)"
+    - "[ ] AuditService.record with LOGIN and LOGOUT events"
+  frontend:
+    - "[ ] Login form with react-hook-form and zod, visible labels, focus on first error"
+    - "[ ] Session state and redirect to dashboard"
+    - "[ ] Logout in topbar returns to login"
+  tests:
+    - "[ ] Success, wrong password, disabled user, 429, token expiry, audit written"
+    - "[ ] Form validation and error states"
+done_when:
+  - AC-UC01 and AC-UC02 pass for all four roles
+open: [Q-15]

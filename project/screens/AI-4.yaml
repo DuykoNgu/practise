@@ -1,0 +1,35 @@
+id: AI-4
+kind: ai
+name: Live mode and baseline
+track: ai
+milestone: AI
+order: 4
+depends_on: [AI-3]
+status: todo
+roles: {}
+stories: [US20]
+acceptance: [AC-UC20]
+rules: [BR-016]
+nfr: [NFR-TIME-003]
+docs:
+  - docs/architecture/ai-package.md#3-llm-call
+backend:
+  modules: []
+  api: []
+  tables: []
+  jobs: []
+ai:
+  modules: [cic_ai.llm, cic_ai.settings]
+  cli: [cic-ai suggest --live, cic-ai eval suggestion --live]
+  datasets: [evals/pricing.toml]
+  metrics: [M-SUG-11, M-SUG-12, M-SUG-13]
+tasks:
+  ai:
+    - "[ ] AnthropicLLMClient: JSON schema output, explicit effort, refusal fallback, timeout, retries, usage"
+    - "[ ] Cost and latency metrics from pricing.toml"
+    - "[ ] First live baseline on the full dataset after user approval"
+  tests:
+    - "[ ] Client unit tests with a mocked SDK response"
+done_when:
+  - Live baseline recorded in project/decisions.md and live bars confirmed
+open: [Q-02, Q-08, Q-09]

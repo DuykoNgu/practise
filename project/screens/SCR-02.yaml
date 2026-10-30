@@ -1,0 +1,40 @@
+id: SCR-02
+kind: screen
+name: Dashboard
+track: main
+milestone: M4
+order: 18
+depends_on: [SCR-11.1]
+status: todo
+covers: [SCR-02]
+route: (workspace)/dashboard
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: [US03]
+acceptance: [AC-UC03]
+rules: [BR-020]
+nfr: [NFR-PERF-003]
+docs:
+  - docs/02-features.md#f07-dashboard-and-incident-detail
+frontend:
+  feature: dashboard
+  components: [DashboardFilters, OpenAnomalyList, TicketsVsBaselineChart, TopSuspectList]
+  hooks: [useDashboard]
+  states: [loading, empty, api-error]
+backend:
+  modules: [dashboard]
+  api:
+    - GET /dashboard
+  tables: []
+  jobs: []
+tasks:
+  backend:
+    - "[ ] Aggregate through anomalies, tickets and baseline services only"
+  frontend:
+    - "[ ] Date range and group filter; chart loaded with next/dynamic"
+  tests:
+    - "[ ] Filters and empty state"
+done_when:
+  - AC-UC03 passes within NFR-PERF-003
+open: []

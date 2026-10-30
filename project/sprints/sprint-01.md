@@ -8,12 +8,12 @@
 
 | Item | Screen | Stories | Owner | Status |
 |---|---|---|---|---|
-| Backend core: config, database, errors, security, deps, container, `/health`, JSON logs | — | — | | ⬜ |
-| Alembic baseline from `cic.sql` + seed Administrator and lookups | — | — | | ⬜ |
-| Frontend: api-client, api-types, `proxy.ts`, workspace shell | — | — | | ⬜ |
-| CI: format, lint, type check, tests, OpenAPI validation, migrations | — | — | | ⬜ |
-| Login and logout with audit and rate limit | SCR-01 | US01, US02 | | ⬜ |
-| Forbidden page | SCR-90 | — | | ⬜ |
+| [PLT-1](../screens/PLT-1.yaml) Backend core | — | — | | ⬜ |
+| [PLT-2](../screens/PLT-2.yaml) Database migration and seed | — | — | | ⬜ |
+| [PLT-3](../screens/PLT-3.yaml) Frontend foundation and shell | — | — | | ⬜ |
+| [PLT-4](../screens/PLT-4.yaml) CI and Docker | — | — | | ⬜ |
+| [SCR-01](../screens/SCR-01.yaml) Login and logout | SCR-01 | US01, US02 | | ⬜ |
+| [SCR-90](../screens/SCR-90.yaml) Forbidden | SCR-90 | — | | ⬜ |
 
 ## Review
 

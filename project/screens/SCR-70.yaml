@@ -1,0 +1,50 @@
+id: SCR-70
+kind: screen
+name: User management
+track: main
+milestone: M2
+order: 8
+depends_on: [SCR-80]
+status: todo
+covers: [SCR-70]
+route: (workspace)/users
+presentation: Page with form modal
+roles:
+  view: [ADMIN]
+  create: [ADMIN]
+  update: [ADMIN]
+  enable_disable: [ADMIN]
+stories: [US17]
+acceptance: [AC-UC18]
+rules: [BR-001, BR-021]
+nfr: [NFR-SEC-002, NFR-SEC-004, NFR-PERF-001, NFR-PERF-002]
+docs:
+  - docs/03-use-cases.md
+frontend:
+  feature: users
+  components: [UserTable, UserFilters, UserFormModal, UserStatusToggle]
+  hooks: [useUsers, useUser, useCreateUser, useUpdateUser, useUpdateUserStatus]
+  states: [loading, empty, filtered-empty, validation-error, api-error, forbidden, conflict, saving, success]
+backend:
+  modules: [users, audit]
+  api:
+    - GET /users
+    - POST /users
+    - GET /users/{userId}
+    - PUT /users/{userId}
+    - PATCH /users/{userId}/status
+  tables: [app_users, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] List with filters and paging; Admin only"
+    - "[ ] Create with role and initial password; duplicate email is a conflict"
+    - "[ ] Edit and enable/disable; audit events"
+  frontend:
+    - "[ ] TanStack Table list with filters and paging"
+    - "[ ] Create/edit modal with focus trap; status toggle with confirmation"
+  tests:
+    - "[ ] Non-admin 403, duplicate email, disabled user cannot log in, audit written"
+done_when:
+  - AC-UC18 passes
+open: []

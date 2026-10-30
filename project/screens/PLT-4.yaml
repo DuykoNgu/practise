@@ -1,0 +1,34 @@
+id: PLT-4
+kind: platform
+name: CI and Docker
+track: main
+milestone: M0
+order: 4
+depends_on: [PLT-2, PLT-3]
+status: todo
+roles: {}
+stories: []
+acceptance: []
+rules: []
+nfr: [NFR-MAINT-002]
+docs:
+  - docs/architecture/c4/02-container.md
+  - project/screens/README.md
+backend:
+  modules: []
+  shared: [Dockerfile]
+  api: []
+  tables: []
+  jobs: []
+tasks:
+  backend:
+    - "[ ] CI: backend ruff, mypy, pytest; frontend format, lint, typecheck, test, build"
+    - "[ ] CI: OpenAPI validation, migration check, python project/tools/check_screens.py"
+    - "[ ] CI: src/ai ruff, mypy, pytest, cic-ai eval all in stub mode once AI-1 lands"
+    - "[ ] Dockerfile: one image started as api or worker"
+    - "[ ] Local compose for PostgreSQL, API, worker, web"
+  tests:
+    - "[ ] CI green on main"
+done_when:
+  - CI is green on main and the image starts as api and worker
+open: [Q-06]

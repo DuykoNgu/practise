@@ -1,0 +1,42 @@
+id: SCR-11.2
+kind: screen
+name: Anomaly detail — related logs
+track: main
+milestone: M5
+order: 20
+depends_on: [API-LOGS]
+status: todo
+covers: [SCR-11]
+route: (workspace)/anomalies/[anomalyId]
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: [US23]
+acceptance: [AC-UC23]
+rules: [BR-018]
+nfr: [NFR-PERF-003]
+docs:
+  - docs/03-use-cases.md#use-case-uc22--uc23-error-logs
+  - docs/architecture/ai-pipeline.md#retrieval-what-evidencecollector-walks-for-one-suspect
+frontend:
+  feature: anomalies
+  components: [RelatedLogsTab, LogGroupTable]
+  hooks: [useAnomalyLogs]
+  states: [loading, no-related-logs, masked-data, api-error]
+backend:
+  modules: [anomalies, logs]
+  api:
+    - GET /anomalies/{anomalyId}/logs
+  tables: [anomaly_logs, error_logs]
+  jobs: [ANOMALY_DETECTION]
+tasks:
+  backend:
+    - "[ ] Link logs to anomalies by tracing window and scope during detection"
+    - "[ ] Group by signature with count, level, first and last seen, masked sample"
+  frontend:
+    - "[ ] Related-logs tab; masked values shown as masked"
+  tests:
+    - "[ ] Linking rules, grouping, retention, no-related-logs state"
+done_when:
+  - AC-UC23 passes
+open: []

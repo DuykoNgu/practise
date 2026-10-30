@@ -1,0 +1,33 @@
+id: API-ITSM
+kind: api
+name: ITSM integration
+track: main
+milestone: M3
+order: 13
+depends_on: [SCR-31]
+status: todo
+roles:
+  push: [ITSM]
+stories: [US19]
+acceptance: [AC-UC10]
+rules: [BR-007]
+nfr: [NFR-PERF-004, NFR-SEC-006]
+docs:
+  - docs/api/README.md
+backend:
+  modules: [integration, tickets, changes]
+  api:
+    - POST /integration/tickets
+    - POST /integration/changes
+  tables: [api_clients, tickets, changes, change_departments, change_branches, change_software, change_device_groups]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] X-API-Key for active ITSM clients; wrong or inactive key returns 401"
+    - "[ ] Batches of at most 1,000; idempotent by client and externalId; counts in response"
+    - "[ ] Calls tickets.service and changes.service; source API"
+  tests:
+    - "[ ] Key checks, batch limit, duplicates, partial rejections, 1,000-item timing"
+done_when:
+  - AC-UC10 passes and records appear on SCR-20 and SCR-30
+open: [Q-03, Q-12]

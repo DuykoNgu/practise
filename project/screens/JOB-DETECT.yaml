@@ -1,0 +1,38 @@
+id: JOB-DETECT
+kind: worker
+name: Anomaly detection and suspect ranking
+track: main
+milestone: M4
+order: 15
+depends_on: [SCR-40]
+status: todo
+roles:
+  run: [WORKER]
+stories: [US12]
+acceptance: [AC-UC13]
+rules: [BR-010, BR-011, BR-012, BR-016]
+nfr: [NFR-TIME-001, NFR-TIME-002, NFR-REL-002, NFR-MAINT-001]
+docs:
+  - docs/09-algorithms.md#3-anomaly-detection
+  - docs/09-algorithms.md#4-suspect-ranking
+  - docs/09-algorithms.md#6-edge-cases
+  - docs/architecture/uml/02-sequence-diagrams.md#4-detect-anomaly-and-rank-suspects--scheduled-job
+  - docs/architecture/uml/01-class-diagrams.md#3-suspect-ranking--modulesanomalies
+  - docs/architecture/c4/04-code.md
+backend:
+  modules: [anomalies, jobs]
+  shared: [app/worker.py]
+  api: []
+  tables: [anomalies, anomaly_tickets, suspects, suspect_factors, jobs, settings]
+  jobs: [ANOMALY_DETECTION]
+tasks:
+  backend:
+    - "[ ] Detection every interval: z-test, severity, no duplicates, tickets linked"
+    - "[ ] Candidates in the tracing window; five factors in [0, 1]; score 0-100 and level"
+    - "[ ] Suspects committed before any LLM work; rerun rules of 09-algorithms 4.4"
+  tests:
+    - "[ ] Printer worked example reproduces exactly"
+    - "[ ] Every edge case of 09-algorithms section 6; weights from settings; SuspectScorer coverage >= 90%"
+done_when:
+  - AC-UC13 passes with seeded data within NFR-TIME-001 and NFR-TIME-002
+open: []

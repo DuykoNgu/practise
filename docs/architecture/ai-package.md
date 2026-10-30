@@ -1,6 +1,6 @@
 # AI Package `cic_ai` — Boundary, CLI, Evals, and Metrics
 
-> **Status:** Target design · No code yet · Work plan: [project/plans/ai-package.md](../../project/plans/ai-package.md)
+> **Status:** Target design · No code yet · Work items: [AI-1](../../project/screens/AI-1.yaml), [AI-2](../../project/screens/AI-2.yaml), [AI-3](../../project/screens/AI-3.yaml), [AI-4](../../project/screens/AI-4.yaml); backend integration in [API-LOGS](../../project/screens/API-LOGS.yaml) and [SCR-11.3](../../project/screens/SCR-11.3.yaml)
 
 The LLM and log-processing parts of CIC live in their own Python package, **`cic_ai`**, in `src/ai/`. The backend and worker import it as a library. It can be developed, tested, and evaluated from the terminal without the database, the API, or the frontend.
 

@@ -1,0 +1,48 @@
+id: SCR-40
+kind: screen
+name: Baseline
+track: main
+milestone: M4
+order: 14
+depends_on: [API-ITSM]
+status: todo
+covers: [SCR-40]
+route: (workspace)/baseline
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+  recompute: [ADMIN, IT_MANAGER]
+stories: [US10, US11]
+acceptance: [AC-UC11, AC-UC12]
+rules: [BR-009, BR-020, BR-021]
+nfr: [NFR-REL-002, NFR-PERF-001]
+docs:
+  - docs/09-algorithms.md#2-baseline
+  - docs/architecture/ai-pipeline.md
+frontend:
+  feature: baseline
+  components: [BaselineFilters, BaselineChart, BaselineTable, RecomputeBaselineButton]
+  hooks: [useBaseline, useRecomputeBaseline]
+  states: [loading, empty, filtered-empty, api-error, forbidden, saving, success]
+backend:
+  modules: [baseline, jobs, audit]
+  shared: [app/worker.py]
+  api:
+    - GET /baselines
+    - POST /baselines/recompute
+  tables: [baseline_runs, baseline_cells, jobs, settings, audit_logs]
+  jobs: [BASELINE_RECOMPUTE]
+tasks:
+  backend:
+    - "[ ] jobs module: create, claim with row lock, at most 3 attempts, one worker per job"
+    - "[ ] Worker loop with poll interval and last-job heartbeat"
+    - "[ ] Baseline per category x weekday x hour with zeros, 3-week fallback, resolved anomalies excluded"
+    - "[ ] Latest SUCCEEDED run is active; failed run never replaces it"
+    - "[ ] Recompute on demand and on schedule; audit event"
+  frontend:
+    - "[ ] Filters, chart loaded with next/dynamic, table, recompute with progress"
+  tests:
+    - "[ ] 09-algorithms baseline examples, concurrent job claim, role check"
+done_when:
+  - AC-UC11 and AC-UC12 pass
+open: [Q-04]

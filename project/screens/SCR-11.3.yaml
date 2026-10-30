@@ -1,0 +1,55 @@
+id: SCR-11.3
+kind: screen
+name: Anomaly detail — suggested resolution
+track: main
+milestone: M5
+order: 21
+depends_on: [SCR-11.2, AI-4]
+status: todo
+covers: [SCR-11]
+route: (workspace)/anomalies/[anomalyId]
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+  decide: [ADMIN, IT_MANAGER, CHANGE_ENGINEER]
+  generate: [WORKER]
+stories: [US20, US21]
+acceptance: [AC-UC20, AC-UC21]
+rules: [BR-013, BR-014, BR-015, BR-016, BR-017, BR-021]
+nfr: [NFR-AI-001, NFR-AI-002, NFR-AI-003, NFR-PRIV-002, NFR-TIME-003]
+docs:
+  - docs/architecture/ai-pipeline.md
+  - docs/architecture/ai-package.md
+  - docs/architecture/uml/02-sequence-diagrams.md#5-generate-suggested-resolution--suggestion_generation-job
+  - docs/architecture/uml/02-sequence-diagrams.md#7-confirm-or-reject-a-suggestion--put-suspectssuspectidsuggestionconfirmation
+  - docs/architecture/uml/01-class-diagrams.md#4-suggested-resolution--modulessuggestions--cic_ai-srcai
+frontend:
+  feature: suggestions
+  components: [SuggestionPanel, CauseList, StepList, EvidenceLink, SuggestionLabelBadge, SuggestionDecisionForm]
+  hooks: [useSuggestion, useDecideSuggestion]
+  states: [loading, no-suggestion, suggestion-label, masked-data, api-error, forbidden, saving, success]
+backend:
+  modules: [suggestions, jobs, audit]
+  api:
+    - GET /suspects/{suspectId}/suggestion
+    - PUT /suspects/{suspectId}/suggestion/confirmation
+  tables: [suggestions, suggestion_statements, statement_evidence, guidelines, jobs, audit_logs]
+  jobs: [SUGGESTION_GENERATION]
+ai:
+  modules: [cic_ai.evidence, cic_ai.pipeline]
+tasks:
+  backend:
+    - "[ ] EvidenceCollector walks the five retrieval paths with limits and builds cic_ai.EvidenceBundle"
+    - "[ ] SUGGESTION_GENERATION after suspects are stored; FAILED with retries on LLM error"
+    - "[ ] Store statements and evidence with log snapshots; status and label rules"
+    - "[ ] Confirm/reject by Admin, IT Manager, Change Engineer; Agent 403; SUGGESTION_DECISION audit"
+    - "[ ] Confirmed suggestions offered as PAST_INCIDENT evidence"
+  frontend:
+    - "[ ] Causes with evidence links; steps labeled Standard (with source) or Flexible; Confirmed/Hypothesis label"
+    - "[ ] No supported suggestion for PENDING, FAILED, NO_SUPPORT; decide action hidden for Agents"
+  tests:
+    - "[ ] Failing LLM stub leaves ranking unchanged; label rules; policy; audit; NFR-AI queries"
+    - "[ ] cic-ai eval suggestion still passes"
+done_when:
+  - AC-UC20 and AC-UC21 pass
+open: [Q-02, Q-13]

@@ -1,0 +1,37 @@
+id: AI-3
+kind: ai
+name: Suggestion pipeline in stub mode
+track: ai
+milestone: AI
+order: 3
+depends_on: [AI-2]
+status: todo
+roles: {}
+stories: [US20]
+acceptance: [AC-UC20]
+rules: [BR-013, BR-014, BR-015]
+nfr: [NFR-AI-001, NFR-AI-002, NFR-PRIV-002, NFR-MAINT-001]
+docs:
+  - docs/architecture/ai-package.md
+  - docs/architecture/uml/01-class-diagrams.md#4-suggested-resolution--modulessuggestions--cic_ai-srcai
+backend:
+  modules: []
+  api: []
+  tables: []
+  jobs: []
+ai:
+  modules: [cic_ai.evidence, cic_ai.prompt, cic_ai.generator, cic_ai.validator, cic_ai.pipeline, cic_ai.llm]
+  cli: [cic-ai suggest, cic-ai eval suggestion]
+  datasets: [evals/datasets/suggestions.jsonl]
+  metrics: [M-SUG-01, M-SUG-02, M-SUG-03, M-SUG-04, M-SUG-05, M-SUG-06, M-SUG-07, M-SUG-08, M-SUG-09, M-SUG-10]
+tasks:
+  ai:
+    - "[ ] EvidenceItem and EvidenceBundle with short refs"
+    - "[ ] PromptBuilder, DraftParser, EvidenceValidator, pipeline.suggest"
+    - "[ ] StubLLMClient replaying canned responses"
+    - "[ ] At least 30 cases including the printer case; every adversarial tag has 3 cases"
+  tests:
+    - "[ ] Every EvidenceValidator rule has a test; validator coverage >= 90%"
+done_when:
+  - cic-ai eval all passes every stub bar in CI
+open: [Q-10]

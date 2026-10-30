@@ -1,0 +1,46 @@
+id: SCR-80
+kind: screen
+name: Profile
+track: main
+milestone: M1
+order: 7
+depends_on: [SCR-90]
+status: todo
+covers: [SCR-80]
+route: (workspace)/profile
+presentation: Tabbed page
+roles:
+  view: [ADMIN:own, IT_MANAGER:own, CHANGE_ENGINEER:own, AGENT:own]
+  update: [ADMIN:own, IT_MANAGER:own, CHANGE_ENGINEER:own, AGENT:own]
+stories: [US18]
+acceptance: [AC-UC19]
+rules: [BR-001, BR-021]
+nfr: [NFR-SEC-002]
+docs:
+  - docs/04-information-architecture.md#screen-hierarchy
+frontend:
+  feature: profile
+  components: [ProfileTabs, AccountForm, PasswordForm, RolePermissionsPanel]
+  hooks: [useProfile, useUpdateProfile, useChangePassword]
+  states: [loading, validation-error, api-error, saving, success]
+backend:
+  modules: [users, audit]
+  api:
+    - GET /profile
+    - PUT /profile
+    - POST /profile/password
+  tables: [app_users, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] Read and update profile; role never changed here"
+    - "[ ] Password change needs current password; minimum 8 characters"
+    - "[ ] Audit events for profile update and password change"
+  frontend:
+    - "[ ] Tabs Account, Security, Roles and permissions (read-only)"
+    - "[ ] Validation keeps input and focuses the first error"
+  tests:
+    - "[ ] Role unchanged, wrong current password, short password, audit written"
+done_when:
+  - AC-UC19 passes
+open: []

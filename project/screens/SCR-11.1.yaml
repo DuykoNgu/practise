@@ -1,0 +1,49 @@
+id: SCR-11.1
+kind: screen
+name: Anomaly detail — suspects
+track: main
+milestone: M4
+order: 17
+depends_on: [SCR-10]
+status: todo
+covers: [SCR-11]
+route: (workspace)/anomalies/[anomalyId]
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+  feedback: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: [US12, US13, US14]
+acceptance: [AC-UC14, AC-UC15]
+rules: [BR-001, BR-012, BR-021]
+nfr: [NFR-PERF-003, NFR-ACC-001]
+docs:
+  - docs/architecture/uml/02-sequence-diagrams.md#6-review-anomaly-suspects-and-suggestion
+  - docs/03-use-cases.md#main-use-case-uc14-view-anomaly-detail-and-ranked-suspects
+frontend:
+  feature: anomalies
+  components: [AnomalyHeader, SuspectList, SuspectFactorBreakdown, SuspectChangePanel, AnomalyTicketTable, AnomalyTimeline, SuspectFeedbackForm]
+  hooks: [useAnomaly, useSuspects, useAnomalyTickets, useAnomalyTimeline, useSubmitSuspectFeedback]
+  states: [loading, no-suspect, api-error, validation-error, saving, success]
+backend:
+  modules: [anomalies, changes, audit]
+  api:
+    - GET /anomalies/{anomalyId}
+    - GET /anomalies/{anomalyId}/suspects
+    - GET /anomalies/{anomalyId}/tickets
+    - GET /anomalies/{anomalyId}/timeline
+    - POST /suspects/{suspectId}/feedback
+  tables: [anomalies, suspects, suspect_factors, anomaly_tickets, suspect_feedback, changes, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] Detail, suspects with per-factor explanation, tickets, timeline"
+    - "[ ] Rollback plan and implementer through changes.service"
+    - "[ ] Feedback CORRECT_CAUSE or UNRELATED with note; audit event"
+  frontend:
+    - "[ ] Score number with High/Medium/Low label; suspect panel with rollback plan and implementer"
+    - "[ ] Tickets and timeline tabs; empty tabs reserved for SCR-11.2 and SCR-11.3"
+  tests:
+    - "[ ] Roles, feedback, no-suspect state"
+done_when:
+  - AC-UC14 and AC-UC15 pass
+open: []

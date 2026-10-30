@@ -1,50 +1,55 @@
 ---
-description: Implement one plan item (M0-1 … M6-2, A1 … A5) after checking it against the plan, project tracking, and docs
-argument-hint: "[item id, e.g. M1-1 or A1; empty = next item]"
+description: Implement one work item from project/screens (screen = frontend feature + backend modules) after checking it against the project files and docs
+argument-hint: "[item id, e.g. SCR-01, PLT-1, API-ITSM, AI-1; empty = next ready item]"
 ---
 
-Implement plan item: **$ARGUMENTS**
+Implement work item: **$ARGUMENTS**
 
 Follow `CLAUDE.md` at every step. Work in this exact order and do not write code before step 4.
 
-## 1. Plan
+## 0. Sync check
 
-1. If `$ARGUMENTS` is empty, open `project/tracker.md` and take the first item that is not ✅ and whose milestone dependencies (listed in `project/plans/README.md`) are ✅. Say which item you picked.
-2. Find the item in `project/plans/` (`m0-platform.md` … `m6-audit-hardening.md`, `ai-package.md`). If it does not exist, stop and ask.
-3. Read the whole item: stories, AC, rules, NFR, API, tables, design links, task checklists, "Done when", "Open".
+Run `python project/tools/check_screens.py` (install `project/tools/requirements.txt` once if needed). If it reports problems, stop, show them, and ask how to resolve them before doing anything else.
+
+## 1. Item
+
+1. If `$ARGUMENTS` is empty, open `project/tracker.md` and take the first item in the main track (or the AI track if the user asked for AI work) whose status is ⬜ and whose `depends_on` items are all ✅. Say which item you picked.
+2. Open `project/screens/<ID>.yaml`. If it does not exist, stop and ask.
+3. Read every key: `covers`, `route`, `roles`, `stories`, `acceptance`, `rules`, `nfr`, `docs`, `frontend`, `backend`, `ai`, `tasks`, `done_when`, `open`.
+4. Every id in `depends_on` must be `done`; otherwise stop and ask whether to continue.
 
 ## 2. Project
 
-1. `project/tracker.md`: confirm the item and its dependencies; if a dependency is not ✅, stop and ask whether to continue.
-2. `project/backlog.md`: the stories of the item and their acceptance ids.
-3. `project/risks-and-questions.md`: every question or inconsistency named in the item's "Open" field. If one is still `Open` and blocks the work, stop and ask the user with options and a recommendation.
-4. `project/decisions.md`: decisions that constrain the item (stack, libraries, boundaries).
-5. `project/definition-of-done.md`: the checklist this item must pass.
+1. `project/risks-and-questions.md`: each id in `open`. If one is still `Open` and blocks a task, stop and ask with options and a recommendation.
+2. `project/decisions.md`: decisions that constrain this item (stack, libraries, boundaries).
+3. `project/backlog.md`: the text and priority of each story.
+4. `project/definition-of-done.md`: the checklist this item must pass.
 
 ## 3. Docs
 
-Read only the parts the item links to, and note the exact rules you will implement:
+Read only what the item references and note the exact rules you will implement:
 
-- `docs/08-acceptance-criteria.md` — the `AC-UC*` sections of the item.
-- `docs/requirements/business-rules.md` and `docs/requirements/non-functional-requirements.md` — the listed ids.
-- `docs/api/openapi.yaml` — the listed paths: request, response, status codes, error format.
-- `src/database/cic.sql` — the listed tables, constraints, enums.
-- `docs/04-information-architecture.md` — screen row, page permissions, UI/UX state contract (screens only).
-- Design links in the item: sequence and class diagrams, `docs/09-algorithms.md`, `docs/architecture/ai-package.md`.
-- `docs/07-folder-structure.md` — where each file goes.
+- `docs/08-acceptance-criteria.md`: each `acceptance` id.
+- `docs/requirements/business-rules.md` and `docs/requirements/non-functional-requirements.md`: each `rules` and `nfr` id.
+- `docs/api/openapi.yaml`: each `backend.api` operation — request, response, status codes, problem+json.
+- `src/database/cic.sql`: each `backend.tables` table and `backend.jobs` value.
+- `docs/04-information-architecture.md`: the `covers` screens, page permissions, and every `frontend.states` entry in the UI/UX state contract.
+- Every path in `docs`.
+- `docs/07-folder-structure.md`: where each file goes; `docs/architecture/ai-package.md` for `ai` items.
 
-Cross-check: if the plan, project files, and docs disagree, or something needed is not defined, stop and ask. Do not invent endpoints, columns, settings, or screens.
+If the item, project files, and docs disagree, or something needed is not defined, stop and ask. Never add endpoints, columns, settings, screens, or libraries that the docs do not define.
 
-Before coding, write a short outline in chat: files to create or change, endpoints, tables, tests, and which checklist boxes they close. Then continue without waiting unless something above is blocked.
+Before coding, write a short outline in chat: files, endpoints, tables, components, hooks, tests, and which `tasks` they close. Then continue without waiting unless something above is blocked.
 
 ## 4. Code
 
-1. Load the skills listed in `CLAUDE.md` §2 for the side you are working on (backend, frontend, or AI package; `claude-api` before any Anthropic SDK call).
-2. Backend first: schemas → repository Protocol and implementation → service → router → wiring in `core/container.py` and `api_router.py`.
-3. Frontend second: `features/<area>/api.ts` → hooks with TanStack Query → components with shadcn/ui and Tailwind → route in `app/`.
-4. AI package items: only inside `src/ai`; add dataset cases with every behavior change.
-5. Write tests together with the code: happy path, validation, 401, 403, conflict, and the UI states of the screen.
-6. No comments or docstrings. No changes outside the item's modules without asking.
+1. Set the item `status: in_progress` in its YAML.
+2. Load the skills listed in `CLAUDE.md` §2 for each side you touch (`claude-api` before any Anthropic SDK call).
+3. Backend (`backend.modules`): schemas → repository Protocol and implementation → service → router → wiring in `core/container.py` and `api_router.py`. Other modules only through their service.
+4. Frontend (`frontend.feature`): `api.ts` → the listed `hooks` with TanStack Query → the listed `components` with shadcn/ui and Tailwind → page in `app/<route>`. Implement every listed state. Enforce `roles` in the backend and hide unauthorized controls in the UI.
+5. AI (`ai`): only inside `src/ai`; add dataset cases with every behavior change.
+6. Tests together with the code: happy path, validation, 401, 403, conflict, and each listed state.
+7. No comments or docstrings. Do not touch modules or features outside the item without asking.
 
 ## 5. Verify
 
@@ -54,14 +59,14 @@ Run every check that applies and fix until all pass; report failures as they are
 - Frontend: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 - AI package: `ruff`, `mypy --strict`, `pytest`, `cic-ai eval all` (stub). Run `--live` only after the user approves the cost.
 
-Then run `simplify` and `code-review` on the diff and apply what they find.
+Then run `simplify` and `code-review` on the diff and apply what they find. Check every `done_when` entry.
 
 ## 6. Record
 
 In the same commit as the code:
 
-- Tick the finished boxes in the item's plan file.
-- Update the item's row in `project/tracker.md` (and the progress table) and the story status in `project/backlog.md`.
-- Add new decisions to `project/decisions.md`; new risks, questions, or doc inconsistencies to `project/risks-and-questions.md`.
+1. In the item YAML, tick finished `tasks` (`[x]`) and set `status: done` (or `review` if something remains, with the reason).
+2. Run `python project/tools/check_screens.py --write` to regenerate `project/tracker.md`; it must pass.
+3. Add new decisions to `project/decisions.md`; new risks, questions, or doc inconsistencies to `project/risks-and-questions.md`.
 
-Commit with a message `<ITEM-ID>: <what was done>` followed by a short progress note, push to the working branch, report what passed, what is left, and suggest `/compact` before the next item.
+Commit as `<ID>: <what was done>` plus a short progress note, push to the working branch, report what passed and what is left, and suggest `/compact` before the next item.

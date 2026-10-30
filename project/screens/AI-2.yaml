@@ -1,0 +1,35 @@
+id: AI-2
+kind: ai
+name: Log classification
+track: ai
+milestone: AI
+order: 2
+depends_on: [AI-1]
+status: todo
+roles: {}
+stories: [US22, US23]
+acceptance: [AC-UC22, AC-UC23]
+rules: []
+nfr: [NFR-MAINT-001]
+docs:
+  - docs/architecture/ai-package.md#5-datasets
+backend:
+  modules: []
+  api: []
+  tables: []
+  jobs: []
+ai:
+  modules: [cic_ai.classification]
+  cli: [cic-ai classify, cic-ai eval classification]
+  datasets: [evals/datasets/classification.jsonl, evals/datasets/categories.json]
+  metrics: [M-CLS-01, M-CLS-02, M-CLS-03]
+tasks:
+  ai:
+    - "[ ] Normalization of numbers, hex, GUIDs, timestamps; SHA-256 signature"
+    - "[ ] Category from keywords, same shape as the categories table"
+    - "[ ] Dataset with at least 100 messages across all seed categories"
+  tests:
+    - "[ ] Classifier unit tests"
+done_when:
+  - cic-ai eval classification passes all M-CLS bars
+open: []

@@ -1,0 +1,47 @@
+id: SCR-31
+kind: screen
+name: Ticket import
+track: main
+milestone: M3
+order: 12
+depends_on: [SCR-30]
+status: todo
+covers: [SCR-31]
+route: (workspace)/tickets/import
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, AGENT]
+  import: [ADMIN, IT_MANAGER, AGENT]
+stories: [US08]
+acceptance: [AC-UC09]
+rules: [BR-005, BR-006, BR-021]
+nfr: [NFR-IMPORT-001]
+docs:
+  - docs/requirements/business-rules.md#br-005--atomic-ticket-import
+frontend:
+  feature: tickets
+  components: [ImportUploader, ImportPreviewTable, ImportHistoryTable]
+  hooks: [usePreviewImport, useCreateImport, useImports, useImport]
+  states: [loading, empty, validation-error, api-error, forbidden, saving, success]
+backend:
+  modules: [tickets, audit]
+  api:
+    - POST /ticket-imports/preview
+    - GET /ticket-imports
+    - POST /ticket-imports
+    - GET /ticket-imports/{importId}
+  tables: [import_batches, tickets, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] CSV and Excel parsing; 10 MB and 5,000 rows checked before parsing completes"
+    - "[ ] Preview with per-row errors; submit stores all rows or none"
+    - "[ ] File kept under FILE_STORAGE_DIR; IMPORT audit event"
+  frontend:
+    - "[ ] Upload, preview with row errors, submit, history list"
+    - "[ ] Progress and duplicate-submit protection"
+  tests:
+    - "[ ] Size and row limits, invalid rows block submit, atomic rollback, history"
+done_when:
+  - AC-UC09 passes
+open: []

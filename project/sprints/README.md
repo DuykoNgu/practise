@@ -17,7 +17,7 @@ Sprint length and dates are pending [Q-01](../risks-and-questions.md#open-questi
 
 ## Committed
 
-| Item | Screen | Stories | Owner | Status |
+| Item (screens/ID.yaml) | Screen | Stories | Owner | Status |
 |---|---|---|---|---|
 
 ## Review

@@ -1,0 +1,33 @@
+id: PLT-2
+kind: platform
+name: Database migration and seed
+track: main
+milestone: M0
+order: 2
+depends_on: [PLT-1]
+status: todo
+roles: {}
+stories: []
+acceptance: []
+rules: [BR-019]
+nfr: [NFR-MAINT-002]
+docs:
+  - docs/06-data-model.md
+  - docs/DATABASE.md
+  - src/database/cic.sql
+backend:
+  modules: []
+  shared: [alembic/, app/seed.py]
+  api: []
+  tables: []
+  jobs: []
+tasks:
+  backend:
+    - "[ ] Alembic setup; first migration applies cic.sql unchanged"
+    - "[ ] Idempotent seed: one Administrator, default settings, lookups with category keywords"
+    - "[ ] Seed or CLI for ITSM and log-source API clients (after Q-12)"
+  tests:
+    - "[ ] Upgrade on empty PostgreSQL 15+; seed runs twice without error"
+done_when:
+  - alembic upgrade head and seed produce a working database
+open: [Q-11, Q-12]

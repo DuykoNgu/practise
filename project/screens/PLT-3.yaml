@@ -1,0 +1,47 @@
+id: PLT-3
+kind: platform
+name: Frontend foundation and shell
+track: main
+milestone: M0
+order: 3
+depends_on: [PLT-1]
+status: todo
+roles: {}
+stories: []
+acceptance: []
+rules: [BR-020]
+nfr: [NFR-ACC-001, NFR-I18N-001]
+docs:
+  - docs/04-information-architecture.md
+  - docs/07-folder-structure.md#2-frontend--nextjs-16--react-19
+  - src/frontend/package.json
+backend:
+  modules: []
+  api: []
+  tables: []
+  jobs: []
+frontend:
+  feature: null
+  components: [WorkspaceSidebar, WorkspaceTopbar, PageSkeleton, EmptyState, ErrorState]
+  hooks: [useSession]
+  states: [loading, empty, api-error, unauthorized, forbidden]
+  shared:
+    - lib/api-types.ts
+    - lib/api-client.ts
+    - lib/format.ts
+    - proxy.ts
+    - app/(workspace)/layout.tsx
+tasks:
+  frontend:
+    - "[ ] Generate lib/api-types.ts with npm run api:types"
+    - "[ ] api-client: base URL, JWT header, 401 to login, 403 to forbidden, problem+json"
+    - "[ ] format.ts: UTC in, viewer time zone out"
+    - "[ ] proxy.ts: redirect by login state and role"
+    - "[ ] Workspace layout with role-filtered sidebar and topbar"
+    - "[ ] Shared skeleton, empty and error components from shadcn/ui"
+  tests:
+    - "[ ] api-client handles 401, 403, problem+json"
+    - "[ ] Sidebar renders only permitted items per role"
+done_when:
+  - A placeholder page renders inside the shell with role-filtered navigation
+open: []

@@ -1,0 +1,40 @@
+id: SCR-10
+kind: screen
+name: Anomaly list
+track: main
+milestone: M4
+order: 16
+depends_on: [JOB-DETECT]
+status: todo
+covers: [SCR-10]
+route: (workspace)/anomalies
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: [US12]
+acceptance: [AC-UC14]
+rules: [BR-001]
+nfr: [NFR-PERF-001, NFR-ACC-001]
+docs:
+  - docs/04-information-architecture.md#primary-task-flows
+frontend:
+  feature: anomalies
+  components: [AnomalyTable, AnomalyFilters, SeverityBadge]
+  hooks: [useAnomalies]
+  states: [loading, empty, filtered-empty, api-error]
+backend:
+  modules: [anomalies]
+  api:
+    - GET /anomalies
+  tables: [anomalies]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] List with filters (status, severity, group, time) and paging"
+  frontend:
+    - "[ ] Table with filters; severity shown as text and color"
+  tests:
+    - "[ ] Filters, empty states, roles"
+done_when:
+  - All roles see open anomalies with filters
+open: []

@@ -1,32 +1,32 @@
 # Backlog — CIC V1
 
-Source of truth for story text: [05-invest-requirements.md](../docs/05-invest-requirements.md). Priority comes from the feature it belongs to in [02-features.md](../docs/02-features.md). Acceptance criteria: [08-acceptance-criteria.md](../docs/08-acceptance-criteria.md).
+Source of truth for story text: [05-invest-requirements.md](../docs/05-invest-requirements.md). Priority comes from the feature it belongs to in [02-features.md](../docs/02-features.md). Acceptance criteria: [08-acceptance-criteria.md](../docs/08-acceptance-criteria.md). Which work items deliver each story, and their status, is generated in [tracker.md § Stories](tracker.md#stories) from [screens/](screens/README.md).
 
-| ID | Story (short) | Feature | Priority | Screen | FE feature | BE modules | Acceptance | Milestone | Status |
-|---|---|---|---|---|---|---|---|---|---|
-| US01 | Log in | F01 | Must | SCR-01 | `auth` | `auth`, `users`, `audit` | AC-UC01 | M1 | ⬜ |
-| US02 | Log out | F01 | Must | Shell → SCR-01 | `auth` | `auth`, `audit` | AC-UC02 | M1 | ⬜ |
-| US18 | Maintain profile and password | F11 | Must | SCR-80 | `profile` | `users` | AC-UC19 | M1 | ⬜ |
-| US17 | Manage users | F11 | Must | SCR-70 | `users` | `users` | AC-UC18 | M2 | ⬜ |
-| US16 | Configure thresholds, window, weights, lookups | F09 | Should | SCR-60 | `settings` | `settings` | AC-UC17 | M2 | ⬜ |
-| US06 | Filter and inspect changes | F02 | Must | SCR-20, SCR-22 | `changes` | `changes` | AC-UC04 | M3 | ⬜ |
-| US04 | Create change with scope and rollback plan | F02 | Must | SCR-21 | `changes` | `changes` | AC-UC05 | M3 | ⬜ |
-| US05 | Edit change and status (own records for Change Engineer) | F02 | Must | SCR-21 | `changes` | `changes` | AC-UC06 | M3 | ⬜ |
-| US09 | Filter and inspect tickets | F03 | Must | SCR-30 | `tickets` | `tickets` | AC-UC07 | M3 | ⬜ |
-| US07 | Add ticket manually | F03 | Must | SCR-30 | `tickets` | `tickets` | AC-UC08 | M3 | ⬜ |
-| US08 | Preview and import CSV/Excel | F03 | Must | SCR-31 | `tickets` | `tickets`, `jobs` | AC-UC09 | M3 | ⬜ |
-| US19 | ITSM pushes tickets and changes | F02, F03 | Must | — (API) | — | `integration` | AC-UC10 | M3 | ⬜ |
-| US10 | View baseline vs actual | F04 | Must | SCR-40 | `baseline` | `baseline` | AC-UC11 | M4 | ⬜ |
-| US11 | Recompute baseline | F04 | Must | SCR-40 | `baseline` | `baseline`, `jobs` | AC-UC12 | M4 | ⬜ |
-| US12 | Anomaly with ranked, explained suspects | F05, F06 | Must | SCR-10, SCR-11 | `anomalies` | `anomalies`, `jobs` | AC-UC13, AC-UC14 | M4 | ⬜ |
-| US13 | Rollback plan and implementer of a suspect | F07 | Must | SCR-11 | `anomalies` | `anomalies`, `changes` | AC-UC14 | M4 | ⬜ |
-| US14 | Suspect feedback | F08 | Should | SCR-11 | `anomalies` | `anomalies` | AC-UC15 | M4 | ⬜ |
-| US03 | Dashboard of open anomalies | F07 | Must | SCR-02 | `dashboard` | `dashboard` | AC-UC03 | M4 | ⬜ |
-| US22 | Log source pushes error logs | F13 | Should | — (API) | — | `logs`, `integration`, `cic_ai` | AC-UC22 | A1–A2, M5 | ⬜ |
-| US23 | Related error logs of an anomaly | F13 | Should | SCR-11 | `anomalies` | `anomalies`, `logs` | AC-UC23 | M5 | ⬜ |
-| US20 | Suggested cause and resolution with evidence | F12 | Should | SCR-11 | `suggestions` | `suggestions`, `cic_ai` | AC-UC20 | A3–A4, M5 | ⬜ |
-| US21 | Confirm or reject suggestion | F12 | Should | SCR-11 | `suggestions` | `suggestions` | AC-UC21 | M5 | ⬜ |
-| US15 | Inspect audit events | F10 | Should | SCR-50 | `audit` | `audit` | AC-UC16 | M6 | ⬜ |
+| ID | Story (short) | Feature | Priority | Acceptance |
+|---|---|---|---|---|
+| US01 | Log in | F01 | Must | AC-UC01 |
+| US02 | Log out | F01 | Must | AC-UC02 |
+| US18 | Maintain profile and password | F11 | Must | AC-UC19 |
+| US17 | Manage users | F11 | Must | AC-UC18 |
+| US16 | Configure thresholds, window, weights, lookups | F09 | Should | AC-UC17 |
+| US06 | Filter and inspect changes | F02 | Must | AC-UC04 |
+| US04 | Create change with scope and rollback plan | F02 | Must | AC-UC05 |
+| US05 | Edit change and status (own records for Change Engineer) | F02 | Must | AC-UC06 |
+| US09 | Filter and inspect tickets | F03 | Must | AC-UC07 |
+| US07 | Add ticket manually | F03 | Must | AC-UC08 |
+| US08 | Preview and import CSV/Excel | F03 | Must | AC-UC09 |
+| US19 | ITSM pushes tickets and changes | F02, F03 | Must | AC-UC10 |
+| US10 | View baseline vs actual | F04 | Must | AC-UC11 |
+| US11 | Recompute baseline | F04 | Must | AC-UC12 |
+| US12 | Anomaly with ranked, explained suspects | F05, F06 | Must | AC-UC13, AC-UC14 |
+| US13 | Rollback plan and implementer of a suspect | F07 | Must | AC-UC14 |
+| US14 | Suspect feedback | F08 | Should | AC-UC15 |
+| US03 | Dashboard of open anomalies | F07 | Must | AC-UC03 |
+| US22 | Log source pushes error logs | F13 | Should | AC-UC22 |
+| US23 | Related error logs of an anomaly | F13 | Should | AC-UC23 |
+| US20 | Suggested cause and resolution with evidence | F12 | Should | AC-UC20 |
+| US21 | Confirm or reject suggestion | F12 | Should | AC-UC21 |
+| US15 | Inspect audit events | F10 | Should | AC-UC16 |
 
 ## Cross-cutting constraints
 

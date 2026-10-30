@@ -4,31 +4,12 @@ These rules apply to every coding task in this repository. They take precedence 
 
 ## 1. Work screen by screen
 
-- Work comes from plan items in [project/plans/](project/plans/README.md) (IDs `M0-1` … `M6-2`, `A1` … `A5`). Start an item with `/implement <ID>`; it checks the plan, then `project/`, then `docs/`, before any code.
-
-- Build one screen at a time, in the order the user asks. A screen is done only when its frontend feature, backend module(s), and tests are all finished and passing.
-- Before coding a screen, read its rows in [Information architecture](docs/04-information-architecture.md) (screen inventory, requirement-to-screen mapping, UI/UX state contract), the related use cases and user stories, and the matching paths in [docs/api/openapi.yaml](docs/api/openapi.yaml).
-- Only touch the frontend feature and backend modules mapped to the current screen. If another module must change, ask the user first.
-
-| Screen | Route (`src/frontend/app/`) | Frontend feature (`src/frontend/features/`) | Backend module (`src/backend/app/modules/`) |
-|---|---|---|---|
-| `SCR-01` Login | `(public)/login` | `auth` | `auth` |
-| `SCR-02` Dashboard | `(workspace)/dashboard` | `dashboard` | `dashboard` |
-| `SCR-10` Anomaly list | `(workspace)/anomalies` | `anomalies` | `anomalies` |
-| `SCR-11` Anomaly detail | `(workspace)/anomalies/[anomalyId]` | `anomalies`, `suggestions` | `anomalies`, `suggestions`, `logs` |
-| `SCR-20`–`SCR-22` Changes | `(workspace)/changes` | `changes` | `changes` |
-| `SCR-30` Ticket list | `(workspace)/tickets` | `tickets` | `tickets` |
-| `SCR-31` Ticket import | `(workspace)/tickets/import` | `tickets` | `tickets`, `jobs` |
-| `SCR-40` Baseline | `(workspace)/baseline` | `baseline` | `baseline`, `jobs` |
-| `SCR-50` Audit log | `(workspace)/audit` | `audit` | `audit` |
-| `SCR-60` Settings | `(workspace)/settings` | `settings` | `settings` |
-| `SCR-70` Users | `(workspace)/users` | `users` | `users` |
-| `SCR-80` Profile | `(workspace)/profile` | `profile` | `users` |
-| `SCR-90` Forbidden | `forbidden` | — | — |
-| No screen (US19, US22) | — | — | `integration`, `logs` |
-| AI track A1–A4 (no screen) | — | — | Package `src/ai` (`cic_ai`), see [AI package](docs/architecture/ai-package.md) |
-
-Shared code (`src/frontend/components/`, `src/frontend/lib/`, `src/backend/app/core/`) is added only when the current screen needs it. AI work follows the phases in [project/plans/ai-package.md](project/plans/ai-package.md), one phase at a time.
+- Work comes from the YAML files in [project/screens/](project/screens/README.md): one file per screen (frontend feature + backend modules) or non-screen slice (`PLT-*`, `API-*`, `JOB-*`, `AI-*`, `NFR-*`). They are the single source for route, roles, stories, acceptance, rules, API, tables, components, hooks, states, and tasks.
+- Start an item with `/implement <ID>`; it runs `python project/tools/check_screens.py`, then checks the item, `project/`, and `docs/` before any code.
+- Build one item at a time, in tracker order unless the user says otherwise. An item is done only when every task is ticked, its checks pass, and `check_screens.py --write` has regenerated `project/tracker.md`.
+- Only touch the frontend feature, backend modules, and `cic_ai` modules listed in the item. If anything else must change, ask the user first.
+- Shared code (`src/frontend/components/`, `src/frontend/lib/`, `src/backend/app/core/`) is added only when the current item needs it.
+- When a doc changes (OpenAPI, schema, IA, rules), run `check_screens.py` and update the affected YAML files in the same commit.
 
 ## 2. Use the matching skills
 

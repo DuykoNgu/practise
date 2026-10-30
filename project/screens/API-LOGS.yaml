@@ -1,0 +1,41 @@
+id: API-LOGS
+kind: api
+name: Error-log intake
+track: main
+milestone: M5
+order: 19
+depends_on: [SCR-02, AI-2]
+status: todo
+roles:
+  push: [LOG_SOURCE]
+  classify: [WORKER]
+stories: [US22]
+acceptance: [AC-UC22]
+rules: [BR-007, BR-008, BR-018]
+nfr: [NFR-PERF-004, NFR-CAP-003, NFR-PRIV-001, NFR-SEC-005]
+docs:
+  - docs/architecture/uml/02-sequence-diagrams.md#3-ingest-error-logs--post-apiv1integrationlogs
+  - docs/architecture/ai-package.md#1-boundary
+  - docs/02-features.md#f13-error-log-analysis
+backend:
+  modules: [logs, integration, jobs]
+  shared: [requirements.txt, Dockerfile]
+  api:
+    - POST /integration/logs
+  tables: [error_logs, api_clients, jobs]
+  jobs: [LOG_CLASSIFICATION]
+ai:
+  modules: [cic_ai.masking, cic_ai.classification]
+tasks:
+  backend:
+    - "[ ] Backend depends on cic-ai; anthropic removed from backend requirements; Docker context includes src/ai"
+    - "[ ] Mask before insert with cic_ai.masking; raw message never stored"
+    - "[ ] Duplicates by externalId; 202 with accepted, duplicate, rejected counts"
+    - "[ ] Device group mapped to department and branch"
+    - "[ ] LOG_CLASSIFICATION job sets signature and category with cic_ai.classification"
+    - "[ ] Retention cleanup by logRetentionDays (after I-06)"
+  tests:
+    - "[ ] Key checks, batch limit, duplicates, masking applied, classification job, 1,000-log timing"
+done_when:
+  - AC-UC22 passes
+open: [I-06, Q-12]

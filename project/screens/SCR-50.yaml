@@ -1,0 +1,40 @@
+id: SCR-50
+kind: screen
+name: Audit log
+track: main
+milestone: M6
+order: 22
+depends_on: [SCR-11.3]
+status: todo
+covers: [SCR-50]
+route: (workspace)/audit
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER]
+stories: [US15]
+acceptance: [AC-UC16]
+rules: [BR-021]
+nfr: [NFR-RET-001, NFR-PERF-001]
+docs:
+  - docs/requirements/business-rules.md#br-021--audit
+frontend:
+  feature: audit
+  components: [AuditTable, AuditFilters]
+  hooks: [useAuditLogs]
+  states: [loading, empty, filtered-empty, api-error, forbidden]
+backend:
+  modules: [audit]
+  api:
+    - GET /audit-logs
+  tables: [audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] List with filters (user, action, object, time) and paging; Admin and IT Manager"
+  frontend:
+    - "[ ] Read-only table with filters"
+  tests:
+    - "[ ] Role checks; every BR-021 action appears"
+done_when:
+  - AC-UC16 passes
+open: []

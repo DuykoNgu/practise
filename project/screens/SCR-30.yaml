@@ -1,0 +1,44 @@
+id: SCR-30
+kind: screen
+name: Tickets
+track: main
+milestone: M3
+order: 11
+depends_on: [SCR-20]
+status: todo
+covers: [SCR-30]
+route: (workspace)/tickets
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+  create: [ADMIN, IT_MANAGER, AGENT]
+stories: [US09, US07]
+acceptance: [AC-UC07, AC-UC08]
+rules: [BR-001, BR-020, BR-021]
+nfr: [NFR-PERF-001, NFR-PERF-002]
+docs:
+  - docs/02-features.md#f03-ticket-management
+frontend:
+  feature: tickets
+  components: [TicketTable, TicketFilters, TicketFormModal, TicketDetailModal]
+  hooks: [useTickets, useTicket, useCreateTicket]
+  states: [loading, empty, filtered-empty, validation-error, api-error, forbidden, saving, success]
+backend:
+  modules: [tickets, audit]
+  api:
+    - GET /tickets
+    - POST /tickets
+    - GET /tickets/{ticketId}
+  tables: [tickets, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] List with filters (time, category, department, branch, software) and paging"
+    - "[ ] Manual create with source MANUAL"
+  frontend:
+    - "[ ] Table with filters, add modal, detail modal"
+  tests:
+    - "[ ] Filters, role checks, validation"
+done_when:
+  - AC-UC07 and AC-UC08 pass
+open: []

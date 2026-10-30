@@ -1,0 +1,48 @@
+id: SCR-60
+kind: screen
+name: Settings
+track: main
+milestone: M2
+order: 9
+depends_on: [SCR-70]
+status: todo
+covers: [SCR-60]
+route: (workspace)/settings
+presentation: Tabbed page
+roles:
+  view: [ADMIN]
+  update: [ADMIN]
+  read_lookups: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: [US16]
+acceptance: [AC-UC17]
+rules: [BR-019, BR-021]
+nfr: [NFR-PERF-001, NFR-PERF-002]
+docs:
+  - docs/09-algorithms.md#1-parameters
+frontend:
+  feature: settings
+  components: [SettingsTabs, DetectionSettingsForm, WeightSettingsForm, RetentionSettingsForm]
+  hooks: [useSettings, useUpdateSettings, useLookups]
+  states: [loading, validation-error, api-error, forbidden, saving, success]
+backend:
+  modules: [settings, audit]
+  api:
+    - GET /settings
+    - PUT /settings
+    - GET /lookups
+  tables: [settings, categories, departments, branches, software, device_groups, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] Read and update thresholds, windows, interval, retention, weights; Admin only"
+    - "[ ] BR-019 range validation returns 400"
+    - "[ ] CONFIG_CHANGE audit event; jobs read fresh values"
+    - "[ ] GET /lookups for all roles"
+  frontend:
+    - "[ ] Tabs for detection, ranking weights, retention"
+    - "[ ] useLookups exported for other features"
+  tests:
+    - "[ ] Every BR-019 boundary, non-admin 403, audit written"
+done_when:
+  - AC-UC17 passes
+open: [Q-11]

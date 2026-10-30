@@ -1,0 +1,48 @@
+id: PLT-1
+kind: platform
+name: Backend core
+track: main
+milestone: M0
+order: 1
+depends_on: []
+status: todo
+roles: {}
+stories: []
+acceptance: []
+rules: [BR-020]
+nfr: [NFR-OBS-001, NFR-SEC-001, NFR-SEC-002, NFR-SEC-005]
+docs:
+  - docs/07-folder-structure.md#3-backend--python--fastapi-by-module
+  - docs/architecture/c4/03-component.md
+  - docs/architecture/uml/02-sequence-diagrams.md#8-common-error-conventions
+  - src/backend/.env.example
+backend:
+  modules: []
+  shared:
+    - app/main.py
+    - app/api_router.py
+    - app/core/config.py
+    - app/core/database.py
+    - app/core/errors.py
+    - app/core/security.py
+    - app/core/deps.py
+    - app/core/container.py
+  api: []
+  tables: []
+  jobs: []
+tasks:
+  backend:
+    - "[ ] FastAPI app with api_router mounted at /api/v1"
+    - "[ ] Settings from .env with pydantic-settings"
+    - "[ ] SQLAlchemy 2 engine and session using DATABASE_SCHEMA"
+    - "[ ] Domain errors mapped to problem+json with trace id, no stack traces"
+    - "[ ] JWT encode/decode (30 min), Argon2 hashing, API-key hashing"
+    - "[ ] Dependencies: session, current user, role check, API client"
+    - "[ ] Composition root in core/container.py"
+    - "[ ] Structured JSON logs with trace id; secrets never logged"
+    - "[ ] Health endpoint (after Q-14)"
+  tests:
+    - "[ ] Error mapping, JWT expiry, hashing, role-check dependency"
+done_when:
+  - API starts, health returns OK, ruff, mypy and pytest pass
+open: [Q-14]

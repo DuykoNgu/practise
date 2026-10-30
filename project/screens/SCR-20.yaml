@@ -1,0 +1,52 @@
+id: SCR-20
+kind: screen
+name: Changes
+track: main
+milestone: M3
+order: 10
+depends_on: [SCR-60]
+status: todo
+covers: [SCR-20, SCR-21, SCR-22]
+route: (workspace)/changes
+presentation: Page with create/edit modal and detail modal
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+  create: [ADMIN, IT_MANAGER, CHANGE_ENGINEER]
+  update: [ADMIN, IT_MANAGER, CHANGE_ENGINEER:own]
+  update_status: [ADMIN, IT_MANAGER, CHANGE_ENGINEER:own]
+stories: [US06, US04, US05]
+acceptance: [AC-UC04, AC-UC05, AC-UC06]
+rules: [BR-001, BR-002, BR-003, BR-004, BR-020, BR-021]
+nfr: [NFR-PERF-001, NFR-PERF-002]
+docs:
+  - docs/architecture/uml/02-sequence-diagrams.md#2-create-and-edit-a-change--post-changes-put-changeschangeid
+  - docs/architecture/uml/01-class-diagrams.md#2-change-management--moduleschanges
+frontend:
+  feature: changes
+  components: [ChangeTable, ChangeFilters, ChangeFormModal, ChangeDetailModal, ChangeStatusMenu]
+  hooks: [useChanges, useChange, useCreateChange, useUpdateChange, useUpdateChangeStatus]
+  states: [loading, empty, filtered-empty, validation-error, api-error, forbidden, conflict, saving, success]
+backend:
+  modules: [changes, audit]
+  api:
+    - GET /changes
+    - POST /changes
+    - GET /changes/{changeId}
+    - PUT /changes/{changeId}
+    - PATCH /changes/{changeId}/status
+  tables: [changes, change_departments, change_branches, change_software, change_device_groups, audit_logs]
+  jobs: []
+tasks:
+  backend:
+    - "[ ] List with filters (type, time, scope, status) and paging"
+    - "[ ] Create/edit with at least one scope item and rollback plan rules"
+    - "[ ] Own-record rule for Change Engineers; status transitions including ROLLED_BACK"
+    - "[ ] Optimistic concurrency returns 409; audit events"
+  frontend:
+    - "[ ] Table with filters, create/edit modal (SCR-21), detail modal (SCR-22), status menu"
+    - "[ ] Actions hidden for roles that cannot edit; conflict keeps input"
+  tests:
+    - "[ ] Role x action matrix, own-record rule, scope and rollback validation, conflict, audit"
+done_when:
+  - AC-UC04, AC-UC05 and AC-UC06 pass
+open: []

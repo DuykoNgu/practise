@@ -1,0 +1,38 @@
+id: SCR-90
+kind: screen
+name: Forbidden
+track: main
+milestone: M1
+order: 6
+depends_on: [SCR-01]
+status: todo
+covers: [SCR-90]
+route: forbidden
+presentation: Page
+roles:
+  view: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+stories: []
+acceptance: []
+rules: [BR-001]
+nfr: [NFR-SEC-004]
+docs:
+  - docs/04-information-architecture.md#page-permissions
+frontend:
+  feature: null
+  components: [ForbiddenPage]
+  hooks: []
+  states: [forbidden]
+backend:
+  modules: []
+  api: []
+  tables: []
+  jobs: []
+tasks:
+  frontend:
+    - "[ ] Forbidden page keeps the session and links back to the dashboard"
+    - "[ ] Role guard sends every unauthorized route here"
+  tests:
+    - "[ ] Each role hitting a forbidden route lands here"
+done_when:
+  - Every route in the IA page-permission table is enforced in the UI
+open: [I-04]

@@ -1,0 +1,37 @@
+id: AI-1
+kind: ai
+name: Package and masking
+track: ai
+milestone: AI
+order: 1
+depends_on: []
+status: todo
+roles: {}
+stories: [US22]
+acceptance: [AC-UC22]
+rules: [BR-008]
+nfr: [NFR-PRIV-001, NFR-MAINT-001]
+docs:
+  - docs/architecture/ai-package.md
+backend:
+  modules: []
+  api: []
+  tables: []
+  jobs: []
+ai:
+  modules: [cic_ai.masking, cic_ai.cli, cic_ai.evals]
+  cli: [cic-ai mask, cic-ai corpus masking, cic-ai eval masking]
+  datasets: [evals/datasets/masking.jsonl]
+  metrics: [M-MASK-01, M-MASK-02, M-MASK-03, M-MASK-04]
+tasks:
+  ai:
+    - "[ ] src/ai/pyproject.toml, package cic_ai, cic-ai entry point, ruff/mypy/pytest config"
+    - "[ ] .gitignore entry for src/ai/evals/reports/"
+    - "[ ] Masker for user names, e-mail, IPv4, IPv6, Windows and Unix paths"
+    - "[ ] Reproducible corpus generator and committed masking.jsonl with at least 500 lines"
+    - "[ ] Eval runner, metric table, JSON report, thresholds.toml, exit code 1 on failure"
+  tests:
+    - "[ ] Masker unit tests; coverage >= 90%"
+done_when:
+  - cic-ai eval masking passes M-MASK-01 = 1.00 and M-MASK-02 = 0
+open: []
