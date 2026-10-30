@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/project/tools/claude_hook.py\" post-edit",
+            "timeout": 60,
+            "statusMessage": "Checking repo rules"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/project/tools/claude_hook.py\" pre-commit",
+            "timeout": 60,
+            "statusMessage": "Checking screens before commit"
+          }
+        ]
+      }
+    ]
+  }
+}
