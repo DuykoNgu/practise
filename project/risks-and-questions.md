@@ -14,8 +14,8 @@
 | Q-08 | Approve the new `LLM_EFFORT` environment variable (default `medium`)? | AI-4 | Product owner | Open |
 | Q-09 | Confirm the proposed eval bars (M-CLS-01 ≥ 0.85, M-SUG-05 ≥ 0.80, M-SUG-06 ≥ 0.70, latency p95 ≤ 60 s) after the first live baseline? | AI-4 | Product owner | Open |
 | Q-10 | Who labels the gold suggestion cases (IT Manager review)? | AI-3 | Product owner | Open |
-| Q-11 | F09 lists managing categories and department/branch/software mappings, but openapi.yaml only has `GET /lookups`. Seed-only in V1, or add endpoints? | PLT-2, SCR-60 | Product owner | Open |
-| Q-12 | How are ITSM and log-source API clients created and rotated (no endpoint)? Seed/CLI script? | PLT-2, API-ITSM | Product owner | Open |
+| Q-11 | F09 lists managing categories and department/branch/software mappings, but openapi.yaml only has `GET /lookups`. Seed-only in V1, or add endpoints? | PLT-2, SCR-60 | Product owner | Resolved (D-023): seed-only in V1 |
+| Q-12 | How are ITSM and log-source API clients created and rotated (no endpoint)? Seed/CLI script? | PLT-2, API-ITSM | Product owner | Resolved (D-023): `python -m app.seed` CLI |
 | Q-13 | How are guidelines created (no endpoint)? Seed/CLI script? | SCR-11.3 | Product owner | Open |
 | Q-14 | Health endpoint required by NFR-OBS-001 is not in openapi.yaml. Add `GET /health` outside `/api/v1`? | PLT-1 | Tech lead | Resolved (D-021): `GET /health` added to openapi.yaml at the root |
 | Q-15 | Where is the failed-login counter for NFR-SEC-003 stored (database table or in-process)? | SCR-01 | Tech lead | Open |
@@ -46,3 +46,4 @@
 | R-08 | Performance targets missed at capacity (200k tickets, 2M logs). | Medium | Medium | Indexes from 06-data-model.md, paginated APIs, load tests in M6 earlier for heavy queries. | Backend |
 | R-09 | Live evals add LLM cost on every run. | Medium | Low | Stub mode by default and in CI; `--limit`; cost printed per run; live runs need approval. | AI |
 | R-10 | Contract drift between `cic_ai.EvidenceBundle` and the backend `EvidenceCollector`. | Medium | Medium | Single model in `cic_ai.evidence`; backend tests build bundles with it. | Backend |
+| R-11 | Alembic revision 0001 reads the live `src/database/cic.sql`, so a later edit to that file changes what a fresh install gets but not existing databases, and the file must be present in the Docker image. | Medium | Medium | Further schema changes go in new revisions; PLT-4 copies `src/database/` into the image; do not edit `cic.sql` after V1 baseline without a revision. | Tech lead |

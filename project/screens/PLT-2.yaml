@@ -5,7 +5,7 @@ track: main
 milestone: M0
 order: 2
 depends_on: [PLT-1]
-status: todo
+status: done
 roles: {}
 stories: []
 acceptance: []
@@ -23,12 +23,19 @@ backend:
   jobs: []
 tasks:
   backend:
-    - "[ ] Alembic setup; first migration applies cic.sql unchanged"
-    - "[ ] Idempotent seed: one Administrator, default settings, lookups with category keywords"
-    - "[ ] Seed or CLI for ITSM and log-source API clients (after Q-12)"
+    - "[x] Alembic setup; first migration applies cic.sql unchanged"
+    - "[x] Idempotent seed: one Administrator, default settings, lookups with category keywords"
+    - "[x] Seed or CLI for ITSM and log-source API clients (after Q-12)"
   tests:
-    - "[ ] Upgrade on empty PostgreSQL 15+; seed runs twice without error"
+    - "[x] Upgrade on empty PostgreSQL 15+; seed runs twice without error"
 done_when:
   - alembic upgrade head and seed produce a working database
-skills_used: []
+skills_used:
+  - backend-design:think-before-coding
+  - backend-design:migration-safety
+  - backend-design:data-modeling-discipline
+  - backend-design:security-discipline
+  - backend-design:testing-with-discernment
+  - simplify
+  - code-review
 open: [Q-11, Q-12]
