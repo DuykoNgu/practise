@@ -65,6 +65,7 @@ Before every commit: `simplify`, then `code-review`.
 - Keep each session focused on one screen.
 - When a screen is finished and committed, or when the context grows long, suggest `/compact` to the user before continuing.
 - Keep a short progress note per screen in the commit message so work can resume after compaction.
+- Read [project/tracker.md](project/tracker.md) at the start of a session to find the next screen; update it, [project/backlog.md](project/backlog.md), and [project/decisions.md](project/decisions.md) in the same commit as the work.
 
 ## 5. Test and verify quality
 

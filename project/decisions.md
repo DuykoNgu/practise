@@ -1,0 +1,22 @@
+# Decision log — CIC V1
+
+Newest first. A decision is changed by adding a new entry that supersedes the old one, never by editing history.
+
+| ID | Date | Decision | Reason | Source |
+|---|---|---|---|---|
+| D-016 | 2026-10-30 | Project management lives in `project/` (roadmap, backlog, tracker, DoD, decisions, risks, sprints). | Keep build tracking separate from product docs. | This folder |
+| D-015 | 2026-10-30 | Server data is managed only with TanStack Query; tables with TanStack Table. | One cache and invalidation model; no duplicated server state. | `CLAUDE.md` §2 |
+| D-014 | 2026-10-30 | Agents may research and add Tailwind-compatible UI libraries that improve the look without slowing page load. | Better UI with a light bundle. | `CLAUDE.md` §2 |
+| D-013 | 2026-10-30 | Frontend uses the system font stack instead of a web font. | Faster first render, no external font request. | `src/frontend/app/layout.tsx` |
+| D-012 | 2026-10-30 | Frontend tests run on Vitest + Testing Library with `happy-dom`. | Lighter and faster than jsdom; jsdom 30 needs Node ≥ 22.22.2. | `src/frontend/vitest.config.ts` |
+| D-011 | 2026-10-30 | TypeScript 5.9 instead of 7.0. | `openapi-typescript` does not yet support TypeScript 7. | `src/frontend/package.json` |
+| D-010 | 2026-10-30 | UI base is Tailwind CSS 4 + shadcn/ui (Radix), lucide icons; forms with react-hook-form + zod. | Fast composition, build-time CSS, only used components ship. | `src/frontend/package.json` |
+| D-009 | 2026-10-30 | Backend dependencies pinned in `requirements.txt`; tools in `requirements-dev.txt`. Passwords hashed with Argon2 via pwdlib. | Reproducible builds; NFR-SEC-002. | `src/backend/requirements*.txt` |
+| D-008 | 2026-10-30 | Agents work screen by screen, use matching skills, stay in V1 scope, never comment code, ask when unsure. | Predictable, reviewable increments. | `CLAUDE.md` |
+| D-007 | — | Suspicion score is rule-based and computed before the LLM runs; the LLM only explains and drafts resolutions. | Explainability; NFR-AI-003. | BR-016, [09-algorithms.md](../docs/09-algorithms.md) |
+| D-006 | — | Frontend is Next.js 16 (App Router) + React 19. | Latest stable; `proxy.ts` replaces middleware. | Commit `46b95c9` |
+| D-005 | — | Backend is organized by module (router, service, repository Protocol, models, schemas) with a separate `ai/` package. | Clear ownership, testable services with fakes. | [07-folder-structure.md](../docs/07-folder-structure.md) |
+| D-004 | — | API and Analysis Worker share one codebase and one Docker image; jobs coordinated through a `jobs` table. | Boring infrastructure, no queue to operate. | [C2 Container](../docs/architecture/c4/02-container.md) |
+| D-003 | — | PostgreSQL 15+ with `cic.sql` as the first Alembic migration. | Constraints enforce invariants in the database. | [06-data-model.md](../docs/06-data-model.md) |
+| D-002 | — | Backend is Python + FastAPI + SQLAlchemy 2 + Pydantic 2. | pandas/NumPy for detection; one language for API and worker. | Commit `72fa729` |
+| D-001 | — | Error-log analysis (F13) and suggested resolution (F12) are in V1 scope. | Technical evidence makes suspects verifiable. | Commits `28c2c56`, `3d20ae8` |

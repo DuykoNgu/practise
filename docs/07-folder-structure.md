@@ -20,6 +20,7 @@ practise/
 │   ├── DATABASE.md
 │   └── mindmap.png
 ├── .gitignore                    # Ignores .env files, keeps .env.example
+├── project/                      # Roadmap, backlog, tracker, decisions, risks, sprints
 ├── CLAUDE.md                     # Rules for coding agents
 └── README.md
 ```

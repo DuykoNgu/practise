@@ -687,6 +687,7 @@ practise/
 │   └── database/cic.sql          # PostgreSQL schema
 ├── docs/                         # Requirements, IA, C4, data model, API, folder structure
 ├── .gitignore                    # Ignores .env files, keeps .env.example
+├── project/                      # Roadmap, backlog, tracker, decisions, risks, sprints
 ├── CLAUDE.md                     # Rules for coding agents
 └── README.md
 ```
@@ -1192,6 +1193,7 @@ Formulas, SQL, edge cases, and tuning: [Algorithms](docs/09-algorithms.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
 - Agent rules: [CLAUDE.md](CLAUDE.md).
+- Project management: [roadmap, backlog, screen tracker, definition of done, decisions, risks, sprints](project/README.md).
 
 ## Project Progress
 
