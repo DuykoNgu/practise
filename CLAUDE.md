@@ -10,6 +10,7 @@ These rules apply to every coding task in this repository. They take precedence 
 - Only touch the frontend feature, backend modules, and `cic_ai` modules listed in the item. If anything else must change, ask the user first.
 - Shared code (`src/frontend/components/`, `src/frontend/lib/`, `src/backend/app/core/`) is added only when the current item needs it.
 - When a doc changes (OpenAPI, schema, IA, rules), run `check_screens.py` and update the affected YAML files in the same commit.
+- Hooks in `.claude/settings.json` enforce this: every edit to `project/screens/`, `docs/`, `cic.sql`, or the question list runs `check_screens.py`; every edit under `src/` is scanned for code comments; `git commit` is blocked while `check_screens.py` fails. Fix what they report; never bypass them.
 
 ## 2. Use the matching skills
 

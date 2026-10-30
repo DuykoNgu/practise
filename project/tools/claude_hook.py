@@ -48,9 +48,8 @@ def script_comments(source: str) -> list[int]:
     lines: list[int] = []
     for number, line in enumerate(source.splitlines(), start=1):
         stripped = line.strip()
-        if stripped.startswith(("//", "/*", "*/")) or (stripped.startswith("*") and not stripped.startswith("**")):
-            lines.append(number)
-        elif SLASH_COMMENT.search(re.sub(r"(\"[^\"]*\"|'[^']*'|`[^`]*`)", "", line)):
+        starts_comment = stripped.startswith(("//", "/*", "*/")) or (stripped.startswith("*") and not stripped.startswith("**"))
+        if starts_comment or SLASH_COMMENT.search(re.sub(r"(\"[^\"]*\"|'[^']*'|`[^`]*`)", "", line)):
             lines.append(number)
     return lines
 

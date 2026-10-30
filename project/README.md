@@ -6,7 +6,7 @@ This folder tracks **how** CIC V1 gets built. [screens/](screens/README.md) is t
 |---|---|---|
 | [screens/](screens/README.md) | One YAML per screen (feature + modules) or slice, same schema for all: route, roles, stories, AC, rules, NFR, API, tables, components, hooks, states, tasks, status | The item is planned, started, or finished |
 | [tracker.md](tracker.md) | **Generated** by `python project/tools/check_screens.py --write`: build order, status, task progress, story coverage | Never by hand |
-| [tools/check_screens.py](tools/check_screens.py) | Validates every YAML against docs, OpenAPI, cic.sql, folder structure; checks coverage and dependencies | Run before and after every item |
+| [tools/check_screens.py](tools/check_screens.py) | Validates every YAML against docs, OpenAPI, cic.sql, folder structure; checks coverage and dependencies | Run before and after every item; also run automatically by the hooks in `.claude/settings.json` ([claude_hook.py](tools/claude_hook.py)) |
 | [roadmap.md](roadmap.md) | Milestone goals and exit criteria | A milestone changes scope |
 | [backlog.md](backlog.md) | Story text, feature, priority, acceptance id | A story changes |
 | [definition-of-done.md](definition-of-done.md) | Checklist a screen and a milestone must pass | The quality bar changes |
