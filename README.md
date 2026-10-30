@@ -103,6 +103,20 @@ For detailed actors, permissions, and business flows, see [Actors, roles, and us
 
 The backend must enforce RBAC and the own-record policy; hiding frontend controls serves UI/UX only.
 
+### 1.5 Acceptance criteria, business rules, and non-functional requirements
+
+Every use case has observable acceptance criteria (`AC-UC01`–`AC-UC23`), written to become API and UI tests. Business rules (`BR-001`–`BR-021`) fix the decisions the code must follow, and non-functional requirements set measurable targets.
+
+| Area | Key rules and targets |
+|---|---|
+| Detection | Anomaly when count > mean + 3 × std dev (configurable); detected within 2 intervals (default 30 min) |
+| Ranking | Changes started within 48 h before the spike (not `SCHEDULED`); score 0–100 from five weighted factors; High ≥ 70, Medium ≥ 40 |
+| AI suggestion | Every cause cites evidence; Flexible (LLM-knowledge) steps keep the label Hypothesis; LLM failure never changes the ranking |
+| Security & privacy | JWT 30 min; 5 failed logins / 15 min → `429`; logs masked before storage and before the LLM; secrets never logged |
+| Performance | Reads P95 ≤ 500 ms; writes ≤ 800 ms; dashboard and anomaly detail ≤ 2 s; 50 concurrent users |
+
+Details: [Acceptance Criteria](docs/08-acceptance-criteria.md), [Business Rules](docs/requirements/business-rules.md), [Non-Functional Requirements](docs/requirements/non-functional-requirements.md).
+
 ## 2. Information Architecture, Screen Hierarchy, and UI/UX
 
 The information architecture organizes the authenticated workspace by business capability. Screen permissions and navigation follow the role matrix, while loading, empty, validation, error, saving, and success states are defined consistently.
@@ -1006,7 +1020,8 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 
 ## Documentation
 
-- Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
+- Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md), [Acceptance criteria](docs/08-acceptance-criteria.md).
+- Requirements catalogs: [Business rules](docs/requirements/business-rules.md) and [Non-functional requirements](docs/requirements/non-functional-requirements.md).
 - Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
 - Architecture: [C4 model](docs/architecture/c4/README.md).
@@ -1022,8 +1037,8 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 - [x] Write user stories following INVEST
 - [x] Design the information architecture and screen permissions
 - [x] Design the screen hierarchy, task flows, and UI states
-- [ ] Write acceptance criteria and business rules
-- [ ] Write non-functional requirements
+- [x] Write acceptance criteria and business rules
+- [x] Write non-functional requirements
 - [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
 - [x] Design the C4 System Context, Container, and Component views
 - [x] Design the database schema and data relationships
