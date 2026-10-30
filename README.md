@@ -163,7 +163,6 @@ Mã màn hình, luồng tác vụ, trạng thái UI, quy tắc truy cập và á
 | [docs/02-features.md](docs/02-features.md) | Danh mục tính năng F01–F11 |
 | [docs/03-use-cases.md](docs/03-use-cases.md) | Tác nhân, use case, phân quyền, user story |
 | [docs/04-information-architecture.md](docs/04-information-architecture.md) | Cây thông tin, màn hình, trạng thái UI |
-| [docs/CIC-Tai-lieu-thiet-ke.docx](docs/CIC-Tai-lieu-thiet-ke.docx) | Bản Word gộp các tài liệu trên |
 
 ## Tiến độ
 
