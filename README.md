@@ -425,12 +425,104 @@ flowchart TB
 
 Complete documentation: [C4 Architecture](docs/architecture/c4/README.md).
 
+## 4. Database Diagrams and OpenAPI 3.0 Contract
+
+This step defines the persistence contract (PostgreSQL) and the HTTP contract (OpenAPI) between the Web Frontend, external systems, and the backend.
+
+### 4.1 Database diagrams
+
+The PostgreSQL model links the three inputs (changes, tickets, error logs) to detection (baselines, anomalies), ranking (suspects), and AI suggestions with cited evidence. Scope values (department, branch, software, device group, category) are shared lookup tables, so scope matching compares ids rather than free text.
+
+```mermaid
+erDiagram
+    changes ||--o{ suspects : suspected_in
+    anomalies ||--o{ suspects : ranks
+    baseline_runs ||--o{ anomalies : compared_with
+    baseline_runs ||--o{ baseline_cells : contains
+    anomalies ||--o{ anomaly_tickets : contains
+    tickets ||--o{ anomaly_tickets : in
+    anomalies ||--o{ anomaly_logs : contains
+    error_logs ||--o{ anomaly_logs : in
+    suspects ||--o{ suspect_factors : explains
+    suspects ||--o{ suspect_feedback : receives
+    suspects ||--o{ suggestions : has_versions
+    suggestions ||--o{ suggestion_statements : states
+    suggestion_statements ||--o{ statement_evidence : cites
+    app_users ||--o{ changes : implements
+    app_users ||--o{ suggestions : decides
+    api_clients ||--o{ error_logs : pushes
+
+    changes {
+        uuid id PK
+        change_type type
+        timestamptz start_at
+        uuid implementer_id FK
+        boolean rollback_available
+    }
+    tickets {
+        uuid id PK
+        timestamptz reported_at
+        uuid category_id FK
+        uuid department_id FK
+        uuid branch_id FK
+    }
+    error_logs {
+        uuid id PK
+        timestamptz occurred_at
+        text message_masked
+        char signature
+    }
+    anomalies {
+        uuid id PK
+        timestamptz start_at
+        integer actual_count
+        numeric expected_count
+        severity severity
+    }
+    suspects {
+        uuid id PK
+        uuid anomaly_id FK
+        uuid change_id FK
+        smallint rank
+        smallint score
+    }
+    suggestions {
+        uuid id PK
+        uuid suspect_id FK
+        smallint version
+        suggestion_label label
+        suggestion_decision decision
+    }
+    suggestion_statements {
+        uuid id PK
+        statement_kind kind
+        statement_basis basis
+    }
+    statement_evidence {
+        uuid id PK
+        evidence_type type
+        text log_snapshot
+    }
+```
+
+Key rules enforced by the schema: a cause statement is always evidence-based, each evidence row cites exactly one thing, `CONFIRMED` requires a person's decision, ticket import is atomic, and integration intake is idempotent by `(source_client_id, external_id)`. Error logs keep only the masked message and are deleted after the retention period; evidence keeps a masked snapshot.
+
+See the [detailed database diagram](docs/DATABASE.md), [data model](docs/06-data-model.md), and [PostgreSQL schema](src/database/cic.sql).
+
+### 4.2 OpenAPI 3.0 API documentation
+
+The REST contract is defined with OpenAPI 3.0 and derived from the use cases and screens. It covers authentication, dashboard, anomalies and ranked suspects, related error logs, suggested resolutions, changes, tickets and import, baseline, audit log, settings, users, profile, and ITSM and log ingestion.
+
+- Contract: [`docs/api/openapi.yaml`](docs/api/openapi.yaml)
+- Conventions, role per operation, and screen-to-API mapping: [API documentation](docs/api/README.md)
+
 ## Documentation
 
 - Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
 - Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
 - Architecture: [C4 model](docs/architecture/c4/README.md).
+- Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
 
 ## Project Progress
@@ -444,7 +536,7 @@ Complete documentation: [C4 Architecture](docs/architecture/c4/README.md).
 - [ ] Write non-functional requirements
 - [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
 - [x] Design the C4 System Context, Container, and Component views
-- [ ] Design the database schema and data relationships
+- [x] Design the database schema and data relationships
 - [x] Write the API documentation in OpenAPI 3.0
 - [ ] Design class diagrams and sequence diagrams
 - [ ] Build the UI prototype for each role
