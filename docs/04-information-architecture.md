@@ -8,57 +8,69 @@
 
 **Site map.** Level 0 is the product, level 1 is a navigation group, level 2 is a page, level 3 is a section or modal inside a page.
 
-```text
-CIC
-├── Public
-│   └── Login
-│
-└── Authenticated workspace (shell: sidebar + topbar)
-    │
-    ├── MONITOR
-    │   ├── Dashboard
-    │   │   ├── Open anomalies
-    │   │   ├── Tickets versus baseline
-    │   │   └── Top suspects
-    │   └── Anomalies
-    │       ├── Anomaly list (filter by group, time, severity)
-    │       └── Anomaly detail
-    │           ├── Ranked suspects (score + explanation)
-    │           ├── Related tickets
-    │           ├── Timeline (changes and tickets)
-    │           └── Suspect feedback
-    │
-    ├── RECORDS
-    │   ├── Changes
-    │   │   ├── Change list
-    │   │   ├── Add / edit change (modal)
-    │   │   └── Change detail (modal: scope, implementer, rollback plan)
-    │   └── Tickets
-    │       ├── Ticket list
-    │       ├── Add ticket (modal)
-    │       └── Import (preview, history)
-    │
-    ├── ANALYSIS
-    │   └── Baseline
-    │       ├── Baseline versus actual chart
-    │       └── Recompute
-    │
-    ├── ADMINISTRATION
-    │   ├── Audit log
-    │   ├── Settings
-    │   │   ├── Thresholds and tracing window
-    │   │   ├── Ranking weights
-    │   │   └── Categories and scope mappings
-    │   └── Users
-    │       └── Add / edit user (modal)
-    │
-    ├── UTILITY (topbar)
-    │   ├── Profile (Account · Security · Roles & permissions)
-    │   ├── Time range and time zone
-    │   └── Log out
-    │
-    └── System page
-        └── 403 Forbidden
+```mermaid
+flowchart TB
+    CIC(["CIC"])
+    CIC --> Public["Public"]
+    CIC --> Shell["Authenticated workspace<br/>(sidebar + topbar)"]
+    CIC --> Sys["System page"]
+    Public --> Login["Login"]
+    Sys --> Forbidden["403 Forbidden"]
+
+    Shell --> Monitor["MONITOR"]
+    Shell --> Records["RECORDS"]
+    Shell --> Analysis["ANALYSIS"]
+    Shell --> Admin["ADMINISTRATION"]
+    Shell --> Utility["UTILITY (topbar)"]
+
+    Monitor --> Dash["Dashboard"]
+    Dash --> D1["Open anomalies"]
+    Dash --> D2["Tickets versus baseline"]
+    Dash --> D3["Top suspects"]
+    Monitor --> Anom["Anomalies"]
+    Anom --> A1["Anomaly list"]
+    Anom --> A2["Anomaly detail"]
+    A2 --> A3["Ranked suspects<br/>score + explanation"]
+    A2 --> A4["Related tickets"]
+    A2 --> A5["Timeline"]
+    A2 --> A6["Suspect feedback"]
+
+    Records --> Chg["Changes"]
+    Chg --> C1["Change list"]
+    Chg --> C2["Add / edit change<br/>(modal)"]
+    Chg --> C3["Change detail<br/>(modal)"]
+    Records --> Tkt["Tickets"]
+    Tkt --> T1["Ticket list"]
+    Tkt --> T2["Add ticket<br/>(modal)"]
+    Tkt --> T3["Import<br/>preview + history"]
+
+    Analysis --> Base["Baseline"]
+    Base --> B1["Baseline versus actual"]
+    Base --> B2["Recompute"]
+
+    Admin --> Audit["Audit log"]
+    Admin --> Set["Settings"]
+    Set --> S1["Thresholds and tracing window"]
+    Set --> S2["Ranking weights"]
+    Set --> S3["Categories and scope mappings"]
+    Admin --> Usr["Users"]
+    Usr --> U1["Add / edit user<br/>(modal)"]
+
+    Utility --> Prof["Profile"]
+    Prof --> P1["Account"]
+    Prof --> P2["Security"]
+    Prof --> P3["Roles and permissions"]
+    Utility --> U2["Time range and time zone"]
+    Utility --> U3["Log out"]
+
+    classDef root fill:#222,color:#fff,stroke:#000
+    classDef group fill:#1168bd,color:#fff,stroke:#0b4f9e
+    classDef page fill:#dbeafe,color:#111,stroke:#3a7bd5
+    classDef leaf fill:#fff,color:#111,stroke:#bbb
+    class CIC root
+    class Monitor,Records,Analysis,Admin,Utility group
+    class Dash,Anom,Chg,Tkt,Base,Audit,Set,Usr,Prof page
+    class D1,D2,D3,A1,A2,A3,A4,A5,A6,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
 ```
 
 **Navigation model.**
