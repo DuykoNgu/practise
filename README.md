@@ -227,11 +227,210 @@ Detailed screen IDs, user flows, screen states, accessibility rules, and use-cas
 
 No UI prototype exists yet. Screens will be designed from the [screen inventory](docs/04-information-architecture.md#3-screen-inventory) in a later phase.
 
+## 3. C4 Architecture
+
+This README presents C1–C3. Responsibilities, architecture rules, and the component catalog are maintained in the architecture documentation directory.
+
+### C1 — System Context
+
+```mermaid
+flowchart LR
+    admin(["Administrator"])
+    manager(["IT Manager"])
+    engineer(["Change Engineer"])
+    agent(["Service Desk Agent"])
+
+    subgraph boundary[" "]
+        cic["CIC — Change-Incident Correlation<br/><i>[Software System]</i><br/>Detects abnormal ticket spikes, ranks recent<br/>changes as suspects, analyzes related error logs,<br/>and suggests resolutions with evidence"]
+    end
+
+    itsm["ITSM System<br/><i>[External Software System]</i><br/>Source of tickets and change records"]
+    logsrc["Log Source<br/><i>[External Software System]</i><br/>Applications or log shippers<br/>that push error logs"]
+    llm["LLM Provider<br/><i>[External Software System]</i><br/>Generates explanations and<br/>suggested resolutions"]
+
+    admin -- "manages users and configuration" --> cic
+    manager -- "reviews suspects, decides on rollback,<br/>confirms resolutions" --> cic
+    engineer -- "records changes and rollback plans,<br/>confirms resolutions" --> cic
+    agent -- "records and imports tickets,<br/>reviews anomalies and suspects" --> cic
+    itsm -- "pushes tickets and changes<br/>[REST / API key]" --> cic
+    logsrc -- "pushes error logs<br/>[REST / API key]" --> cic
+    cic -- "sends masked evidence,<br/>receives drafted text [HTTPS]" --> llm
+
+    style cic fill:#1168bd,color:#fff
+    style itsm fill:#999,color:#fff
+    style logsrc fill:#999,color:#fff
+    style llm fill:#999,color:#fff
+```
+
+### C2 — Container
+
+```mermaid
+flowchart TB
+    people(["Administrator / IT Manager /<br/>Change Engineer / Service Desk Agent"])
+    itsm["ITSM System<br/><i>[External System]</i>"]
+    logsrc["Log Source<br/><i>[External System]</i>"]
+    llm["LLM Provider<br/><i>[External System]</i>"]
+
+    subgraph platform["CIC [Software System Boundary]"]
+        direction TB
+        subgraph presentation["Presentation"]
+            web["Web Frontend<br/><i>[Container: React + Vite SPA]</i><br/>Dashboard, anomalies, suspects, changes,<br/>tickets, baseline, settings, users"]
+        end
+        subgraph application["Application"]
+            api["Backend API<br/><i>[Container: ASP.NET Core Web API]</i><br/>Authentication, RBAC, CRUD, import,<br/>integration intake, log masking, feedback"]
+            worker["Analysis Worker<br/><i>[Container: .NET Worker Service]</i><br/>Baseline, anomaly detection, suspect ranking,<br/>log classification and linking, AI suggestions"]
+        end
+        subgraph data["Data"]
+            db[("PostgreSQL<br/><i>[Container: Database]</i><br/>Changes, tickets, logs, baselines, anomalies,<br/>suspects, suggestions, feedback, jobs, audit")]
+            files[("File Storage<br/><i>[Container: Filesystem / object storage]</i><br/>Uploaded import files")]
+        end
+    end
+
+    people --> web
+    web -- "REST / HTTPS / JSON<br/>Bearer JWT" --> api
+    itsm -- "REST / HTTPS / JSON<br/>API key" --> api
+    logsrc -- "REST / HTTPS / JSON<br/>API key" --> api
+    api -- "SQL" --> db
+    api -- "store / read files" --> files
+    worker -- "SQL: read data, write results,<br/>poll job table" --> db
+    worker -- "HTTPS: masked evidence" --> llm
+
+    style web fill:#1168bd,color:#fff
+    style api fill:#1168bd,color:#fff
+    style worker fill:#1168bd,color:#fff
+    style db fill:#1168bd,color:#fff
+    style files fill:#1168bd,color:#fff
+    style itsm fill:#999,color:#fff
+    style logsrc fill:#999,color:#fff
+    style llm fill:#999,color:#fff
+```
+
+The Backend API and the Analysis Worker communicate through a job table in PostgreSQL, not a message broker. Logs are masked by the Backend API on receipt; only the Analysis Worker calls the LLM Provider, after the suspicion score is computed.
+
+### C3 — Component
+
+#### C3.1 Backend API
+
+```mermaid
+flowchart TB
+    web["Web Frontend<br/><i>[Container]</i>"]
+    ext["ITSM System / Log Source<br/><i>[External Systems]</i>"]
+    db[("PostgreSQL<br/><i>[Container]</i>")]
+    files[("File Storage<br/><i>[Container]</i>")]
+
+    subgraph api["Backend API [Container]"]
+        direction TB
+        http["HTTP API<br/><i>[Component]</i><br/>REST endpoints, request validation,<br/>ProblemDetails error mapping"]
+        identity["Identity & Access<br/><i>[Component]</i><br/>Login, JWT, RBAC,<br/>own-record policy"]
+        intake["Integration Intake<br/><i>[Component]</i><br/>API key check, idempotent intake<br/>of tickets, changes, logs"]
+        masking["Log Masking<br/><i>[Component]</i><br/>Removes user names, e-mails,<br/>IPs, paths from log messages"]
+        change["Change Management<br/><i>[Component]</i><br/>Change CRUD, status,<br/>scope, rollback plan"]
+        ticket["Ticket Management<br/><i>[Component]</i><br/>Ticket CRUD, CSV/Excel preview<br/>and atomic import"]
+        incident["Incident Query<br/><i>[Component]</i><br/>Dashboard, anomalies, suspects,<br/>related tickets and logs, timeline"]
+        suggestion["Suggestion & Feedback<br/><i>[Component]</i><br/>Read suggestions, confirm or reject,<br/>suspect feedback"]
+        admin["Settings, Users & Profile<br/><i>[Component]</i><br/>Configuration, lookups,<br/>user admin, profile"]
+        jobs["Job Requests<br/><i>[Component]</i><br/>Queues baseline recompute<br/>and analysis jobs"]
+        audit["Audit Log<br/><i>[Component]</i><br/>Records business actions"]
+        persistence["Persistence<br/><i>[Component]</i><br/>Repositories, transactions,<br/>SQL mapping"]
+    end
+
+    web --> http
+    ext --> http
+    http --> identity
+    http --> intake
+    http --> change
+    http --> ticket
+    http --> incident
+    http --> suggestion
+    http --> admin
+    http --> jobs
+    intake --> masking
+    intake --> persistence
+    change --> persistence
+    ticket --> persistence
+    ticket --> files
+    incident --> persistence
+    suggestion --> persistence
+    admin --> persistence
+    jobs --> persistence
+    change -.->|"events"| audit
+    ticket -.->|"import results"| audit
+    suggestion -.->|"confirmations"| audit
+    admin -.->|"config and user changes"| audit
+    audit --> persistence
+    persistence --> db
+
+    style http fill:#1168bd,color:#fff
+    style identity fill:#1168bd,color:#fff
+    style intake fill:#1168bd,color:#fff
+    style masking fill:#0b4f9e,color:#fff
+    style change fill:#1168bd,color:#fff
+    style ticket fill:#1168bd,color:#fff
+    style incident fill:#1168bd,color:#fff
+    style suggestion fill:#0b4f9e,color:#fff
+    style admin fill:#1168bd,color:#fff
+    style jobs fill:#1168bd,color:#fff
+    style audit fill:#1168bd,color:#fff
+    style persistence fill:#1168bd,color:#fff
+```
+
+#### C3.2 Analysis Worker
+
+```mermaid
+flowchart TB
+    db[("PostgreSQL<br/><i>[Container]</i>")]
+    llm["LLM Provider<br/><i>[External System]</i>"]
+
+    subgraph worker["Analysis Worker [Container]"]
+        direction TB
+        runner["Job Runner<br/><i>[Component]</i><br/>Schedule and job-table polling,<br/>retries, one job per lock"]
+        baseline["Baseline Calculator<br/><i>[Component]</i><br/>Mean and deviation per<br/>hour × weekday × category"]
+        detector["Anomaly Detector<br/><i>[Component]</i><br/>Compares actual volume with baseline<br/>per group, creates anomalies"]
+        classifier["Log Classifier & Linker<br/><i>[Component]</i><br/>Signature, category, links logs<br/>to anomalies by time and scope"]
+        ranker["Suspect Ranker<br/><i>[Component]</i><br/>Rule-based score 0–100<br/>with per-factor explanation"]
+        evidence["Evidence Collector<br/><i>[Component]</i><br/>Logs, tickets, change, rollback plan,<br/>confirmed past incidents"]
+        generator["Suggestion Generator<br/><i>[Component]</i><br/>Builds the prompt, calls the LLM,<br/>parses cause and resolution"]
+        validator["Evidence Validator<br/><i>[Component]</i><br/>Drops uncited cause statements,<br/>sets basis and label"]
+        persistence["Persistence<br/><i>[Component]</i><br/>Repositories and SQL mapping"]
+    end
+
+    runner --> baseline
+    runner --> detector
+    runner --> classifier
+    detector --> ranker
+    classifier --> ranker
+    ranker --> evidence
+    evidence --> generator
+    generator --> llm
+    generator --> validator
+    baseline --> persistence
+    detector --> persistence
+    classifier --> persistence
+    ranker --> persistence
+    evidence --> persistence
+    validator --> persistence
+    runner --> persistence
+    persistence --> db
+
+    style runner fill:#1168bd,color:#fff
+    style baseline fill:#1168bd,color:#fff
+    style detector fill:#1168bd,color:#fff
+    style classifier fill:#1168bd,color:#fff
+    style ranker fill:#0b4f9e,color:#fff
+    style evidence fill:#1168bd,color:#fff
+    style generator fill:#0b4f9e,color:#fff
+    style validator fill:#0b4f9e,color:#fff
+    style persistence fill:#1168bd,color:#fff
+```
+
+Complete documentation: [C4 Architecture](docs/architecture/c4/README.md).
+
 ## Documentation
 
 - Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
 - Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
+- Architecture: [C4 model](docs/architecture/c4/README.md).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
 
 ## Project Progress
@@ -244,7 +443,7 @@ No UI prototype exists yet. Screens will be designed from the [screen inventory]
 - [ ] Write acceptance criteria and business rules
 - [ ] Write non-functional requirements
 - [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
-- [ ] Design the C4 System Context, Container, and Component views
+- [x] Design the C4 System Context, Container, and Component views
 - [ ] Design the database schema and data relationships
 - [x] Write the API documentation in OpenAPI 3.0
 - [ ] Design class diagrams and sequence diagrams

@@ -115,4 +115,4 @@ flowchart LR
     processor --> llm
 ```
 
-This is an idea-level view. Detailed architecture (C4, data model, API) is defined in later phases.
+This is an idea-level view. The detailed architecture is in the [C4 model](architecture/c4/README.md); the data model is defined in a later phase.
