@@ -687,6 +687,7 @@ practise/
 │   └── database/cic.sql          # PostgreSQL schema
 ├── docs/                         # Requirements, IA, C4, data model, API, folder structure
 ├── .gitignore                    # Ignores .env files, keeps .env.example
+├── CLAUDE.md                     # Rules for coding agents
 └── README.md
 ```
 
@@ -698,11 +699,13 @@ src/frontend/
 │                        # changes, tickets/import, baseline, audit, settings, users, profile, forbidden
 ├── features/            # auth, dashboard, anomalies, suggestions, changes, tickets,
 │                        # baseline, audit, settings, users, profile (components/, hooks/, api.ts)
-├── components/          # Shared UI
-├── lib/                 # api-client, api-types (from OpenAPI), formatting
+├── components/          # Shared UI; ui/ holds shadcn/ui components
+├── lib/                 # api-client, api-types (from OpenAPI), formatting, utils (cn)
 ├── proxy.ts             # Login and role redirects (Next.js 16 name for middleware)
-├── tests/
-└── .env.example
+├── tests/               # Vitest + Testing Library
+├── components.json      # shadcn/ui configuration
+├── .env.example
+└── package.json         # Tailwind CSS 4, shadcn/ui, react-hook-form + zod, TanStack Query/Table
 ```
 
 ```text
@@ -726,7 +729,8 @@ src/backend/
 ├── tests/               # fakes/, modules/, ai/
 ├── alembic/
 ├── .env.example
-├── requirements.txt
+├── requirements.txt     # runtime dependencies (pinned)
+├── requirements-dev.txt # + pytest, ruff, mypy
 └── Dockerfile           # one image: api or worker
 ```
 
@@ -1187,6 +1191,7 @@ Formulas, SQL, edge cases, and tuning: [Algorithms](docs/09-algorithms.md).
 - Code-level design: [C4 Level 4](docs/architecture/c4/04-code.md), [class diagrams](docs/architecture/uml/01-class-diagrams.md), [sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
+- Agent rules: [CLAUDE.md](CLAUDE.md).
 
 ## Project Progress
 
