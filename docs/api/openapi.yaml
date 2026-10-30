@@ -1,0 +1,1239 @@
+openapi: 3.0.3
+info:
+  title: Change-Incident Correlation (CIC) API
+  version: 1.0.0
+  description: |
+    REST contract for CIC V1. Design status: TARGET V1 (no implementation yet).
+
+    The suspicion score of a suspect is computed by rules and statistics. The LLM only
+    explains suspects and drafts suggested resolutions; every statement must cite evidence.
+    The system only suggests; it never executes a rollback or fix.
+
+    Roles: `ADMIN`, `IT_MANAGER`, `CHANGE_ENGINEER`, `AGENT`. Each operation lists its allowed
+    roles in `x-roles`. The backend must enforce them; hiding controls in the UI is not enough.
+servers:
+  - url: /api/v1
+    description: Relative to the application host
+tags:
+  - name: Auth
+  - name: Dashboard
+  - name: Anomalies
+  - name: Suggestions
+  - name: Changes
+  - name: Tickets
+  - name: Ticket imports
+  - name: Baseline
+  - name: Audit
+  - name: Settings
+  - name: Users
+  - name: Profile
+  - name: Lookups
+  - name: Integration
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Log in (UC01)
+      security: []
+      x-roles: [PUBLIC]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Log out (UC02)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      responses:
+        '204': { description: Logged out }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      operationId: getDashboard
+      summary: Incident dashboard (UC03)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+        - { $ref: '#/components/parameters/Department' }
+        - { $ref: '#/components/parameters/Branch' }
+      responses:
+        '200':
+          description: Open anomalies, tickets versus baseline, top suspects
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dashboard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /anomalies:
+    get:
+      tags: [Anomalies]
+      operationId: listAnomalies
+      summary: List anomalies (UC14)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+        - { $ref: '#/components/parameters/Department' }
+        - { $ref: '#/components/parameters/Branch' }
+        - { $ref: '#/components/parameters/Category' }
+        - { name: severity, in: query, schema: { $ref: '#/components/schemas/Severity' } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/AnomalyStatus' } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of anomalies
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PageMeta' }
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Anomaly' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /anomalies/{anomalyId}:
+    get:
+      tags: [Anomalies]
+      operationId: getAnomaly
+      summary: Anomaly detail (UC14)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/AnomalyId' } ]
+      responses:
+        '200':
+          description: Anomaly
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Anomaly' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /anomalies/{anomalyId}/suspects:
+    get:
+      tags: [Anomalies]
+      operationId: listSuspects
+      summary: Ranked suspects with per-factor explanation (UC14)
+      description: Ordered by descending score. Empty list means "No suspect found".
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/AnomalyId' } ]
+      responses:
+        '200':
+          description: Suspects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Suspect' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /anomalies/{anomalyId}/tickets:
+    get:
+      tags: [Anomalies]
+      operationId: listAnomalyTickets
+      summary: Tickets belonging to an anomaly (UC14)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/AnomalyId' }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of tickets
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /anomalies/{anomalyId}/timeline:
+    get:
+      tags: [Anomalies]
+      operationId: getAnomalyTimeline
+      summary: Timeline of changes and tickets (UC14)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/AnomalyId' } ]
+      responses:
+        '200':
+          description: Events ordered by time
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TimelineEvent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /suspects/{suspectId}/feedback:
+    post:
+      tags: [Anomalies]
+      operationId: submitSuspectFeedback
+      summary: Mark a suspect as the cause or unrelated (UC15)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/SuspectId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SuspectFeedbackInput' }
+      responses:
+        '204': { description: Feedback stored }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /suspects/{suspectId}/suggestion:
+    get:
+      tags: [Suggestions]
+      operationId: getSuggestedResolution
+      summary: Suggested cause and resolution of a suspect (UC20)
+      description: Returns 404 with problem type `no-supported-suggestion` when no evidence supports a suggestion.
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/SuspectId' } ]
+      responses:
+        '200':
+          description: Suggested resolution with cited evidence
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuggestedResolution' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /suspects/{suspectId}/suggestion/confirmation:
+    put:
+      tags: [Suggestions]
+      operationId: confirmSuggestedResolution
+      summary: Confirm or reject a suggested resolution (UC21)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER]
+      parameters: [ { $ref: '#/components/parameters/SuspectId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SuggestionConfirmationInput' }
+      responses:
+        '200':
+          description: Updated suggestion
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuggestedResolution' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /changes:
+    get:
+      tags: [Changes]
+      operationId: listChanges
+      summary: List changes (UC04)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/ChangeType' } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ChangeStatus' } }
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+        - { $ref: '#/components/parameters/Department' }
+        - { $ref: '#/components/parameters/Branch' }
+        - { name: software, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of changes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PageMeta' }
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Change' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Changes]
+      operationId: createChange
+      summary: Create a change record (UC05)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangeInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Change' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /changes/{changeId}:
+    get:
+      tags: [Changes]
+      operationId: getChange
+      summary: Change detail (UC04)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/ChangeId' } ]
+      responses:
+        '200':
+          description: Change
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Change' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Changes]
+      operationId: updateChange
+      summary: Update a change record (UC06)
+      description: A Change Engineer may update only changes they implemented.
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER]
+      parameters: [ { $ref: '#/components/parameters/ChangeId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangeInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Change' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /changes/{changeId}/status:
+    patch:
+      tags: [Changes]
+      operationId: updateChangeStatus
+      summary: Update change status, including rolled back (UC06)
+      description: Same own-record rule as `updateChange`.
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER]
+      parameters: [ { $ref: '#/components/parameters/ChangeId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/ChangeStatus' }
+                note: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Change' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tickets:
+    get:
+      tags: [Tickets]
+      operationId: listTickets
+      summary: List tickets (UC07)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+        - { $ref: '#/components/parameters/Category' }
+        - { $ref: '#/components/parameters/Department' }
+        - { $ref: '#/components/parameters/Branch' }
+        - { name: software, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/TicketStatus' } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of tickets
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Tickets]
+      operationId: createTicket
+      summary: Add a ticket manually (UC08)
+      x-roles: [ADMIN, IT_MANAGER, AGENT]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TicketInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ticket' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /tickets/{ticketId}:
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: Ticket detail (UC07)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters: [ { $ref: '#/components/parameters/TicketId' } ]
+      responses:
+        '200':
+          description: Ticket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ticket' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ticket-imports/preview:
+    post:
+      tags: [Ticket imports]
+      operationId: previewTicketImport
+      summary: Validate a CSV/Excel file and preview rows (UC09)
+      x-roles: [ADMIN, IT_MANAGER, AGENT]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/ImportFile' }
+      responses:
+        '200':
+          description: Row-level preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportPreview' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /ticket-imports:
+    get:
+      tags: [Ticket imports]
+      operationId: listTicketImports
+      summary: Import history (UC09)
+      x-roles: [ADMIN, IT_MANAGER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of import batches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PageMeta' }
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/ImportResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Ticket imports]
+      operationId: createTicketImport
+      summary: Import tickets (UC09)
+      description: 'Atomic: either every row is accepted or none.'
+      x-roles: [ADMIN, IT_MANAGER, AGENT]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/ImportFile' }
+      responses:
+        '201':
+          description: Import result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /ticket-imports/{importId}:
+    get:
+      tags: [Ticket imports]
+      operationId: getTicketImport
+      summary: Import batch detail (UC09)
+      x-roles: [ADMIN, IT_MANAGER, AGENT]
+      parameters:
+        - { name: importId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Import batch
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /baselines:
+    get:
+      tags: [Baseline]
+      operationId: getBaseline
+      summary: Baseline versus actual (UC11)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      parameters:
+        - { $ref: '#/components/parameters/Category' }
+        - { $ref: '#/components/parameters/Department' }
+        - { $ref: '#/components/parameters/Branch' }
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+      responses:
+        '200':
+          description: Baseline cells and actual counts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Baseline' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /baselines/recompute:
+    post:
+      tags: [Baseline]
+      operationId: recomputeBaseline
+      summary: Recompute baseline (UC12)
+      x-roles: [ADMIN, IT_MANAGER]
+      responses:
+        '202':
+          description: Recompute started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId: { type: string, format: uuid }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /audit-logs:
+    get:
+      tags: [Audit]
+      operationId: listAuditLogs
+      summary: Activity log (UC16)
+      x-roles: [ADMIN, IT_MANAGER]
+      parameters:
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+        - { name: userId, in: query, schema: { type: string, format: uuid } }
+        - { name: action, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of audit events
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PageMeta' }
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/AuditLog' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /settings:
+    get:
+      tags: [Settings]
+      operationId: getSettings
+      summary: Read system configuration (UC17)
+      x-roles: [ADMIN]
+      responses:
+        '200':
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Settings' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Settings]
+      operationId: updateSettings
+      summary: Update system configuration (UC17)
+      x-roles: [ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Settings' }
+      responses:
+        '200':
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Settings' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users (UC18)
+      x-roles: [ADMIN]
+      parameters:
+        - { name: role, in: query, schema: { $ref: '#/components/schemas/Role' } }
+        - { name: active, in: query, schema: { type: boolean } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Page of users
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PageMeta' }
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Create a user (UC18)
+      x-roles: [ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /users/{userId}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: User detail (UC18)
+      x-roles: [ADMIN]
+      parameters: [ { $ref: '#/components/parameters/UserId' } ]
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Update a user and role (UC18)
+      x-roles: [ADMIN]
+      parameters: [ { $ref: '#/components/parameters/UserId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /users/{userId}/status:
+    patch:
+      tags: [Users]
+      operationId: updateUserStatus
+      summary: Enable or disable a user (UC18)
+      x-roles: [ADMIN]
+      parameters: [ { $ref: '#/components/parameters/UserId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [active]
+              properties:
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /profile:
+    get:
+      tags: [Profile]
+      operationId: getProfile
+      summary: Own profile (UC19)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Profile]
+      operationId: updateProfile
+      summary: Update own profile; the role cannot be changed here (UC19)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileUpdate' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /profile/password:
+    post:
+      tags: [Profile]
+      operationId: changePassword
+      summary: Change own password (UC19)
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, format: password }
+                newPassword: { type: string, format: password, minLength: 8 }
+      responses:
+        '204': { description: Password changed }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /lookups:
+    get:
+      tags: [Lookups]
+      operationId: getLookups
+      summary: Categories, departments, branches, software and device groups
+      description: Supplies choices for forms and filters; it has no screen of its own.
+      x-roles: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+      responses:
+        '200':
+          description: Lookup values
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lookups' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /integration/tickets:
+    post:
+      tags: [Integration]
+      operationId: ingestTickets
+      summary: ITSM pushes tickets (UC10)
+      security:
+        - apiKeyAuth: []
+      x-roles: [ITSM]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tickets]
+              properties:
+                tickets:
+                  type: array
+                  maxItems: 1000
+                  items: { $ref: '#/components/schemas/TicketIngest' }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /integration/changes:
+    post:
+      tags: [Integration]
+      operationId: ingestChanges
+      summary: ITSM pushes changes (UC10)
+      security:
+        - apiKeyAuth: []
+      x-roles: [ITSM]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [changes]
+              properties:
+                changes:
+                  type: array
+                  maxItems: 1000
+                  items: { $ref: '#/components/schemas/ChangeIngest' }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    AnomalyId: { name: anomalyId, in: path, required: true, schema: { type: string, format: uuid } }
+    SuspectId: { name: suspectId, in: path, required: true, schema: { type: string, format: uuid } }
+    ChangeId: { name: changeId, in: path, required: true, schema: { type: string, format: uuid } }
+    TicketId: { name: ticketId, in: path, required: true, schema: { type: string, format: uuid } }
+    UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    From: { name: from, in: query, description: 'Start of range (ISO 8601)', schema: { type: string, format: date-time } }
+    To: { name: to, in: query, description: 'End of range (ISO 8601)', schema: { type: string, format: date-time } }
+    Department: { name: department, in: query, schema: { type: string } }
+    Branch: { name: branch, in: query, schema: { type: string } }
+    Category: { name: category, in: query, schema: { type: string } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    PageSize: { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+  responses:
+    ValidationError:
+      description: Invalid input (field errors in `errors`)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Unauthorized:
+      description: Missing or invalid authentication; the client returns to Login
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Forbidden:
+      description: Authenticated but not allowed; the client shows 403
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Conflict:
+      description: Conflicts with existing data (for example a duplicate email)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+  schemas:
+    ProblemDetails:
+      type: object
+      required: [title, status, traceId]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        traceId: { type: string, description: 'Reference shown to the user; technical details are not exposed' }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+    PageMeta:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+    Role:
+      type: string
+      enum: [ADMIN, IT_MANAGER, CHANGE_ENGINEER, AGENT]
+    Severity:
+      type: string
+      enum: [HIGH, MEDIUM, LOW]
+    AnomalyStatus:
+      type: string
+      enum: [OPEN, ACKNOWLEDGED, RESOLVED]
+    ChangeType:
+      type: string
+      enum: [PATCH, CONFIG_CHANGE, SOFTWARE_UPGRADE]
+    ChangeStatus:
+      type: string
+      enum: [SCHEDULED, IN_PROGRESS, COMPLETED, ROLLED_BACK, FAILED]
+    TicketStatus:
+      type: string
+      enum: [NEW, IN_PROGRESS, RESOLVED, CLOSED]
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    LoginResponse:
+      type: object
+      required: [accessToken, expiresAt, user]
+      properties:
+        accessToken: { type: string }
+        expiresAt: { type: string, format: date-time }
+        user: { $ref: '#/components/schemas/User' }
+    User:
+      type: object
+      required: [id, fullName, email, role, active]
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        avatarUrl: { type: string, format: uri }
+        role: { $ref: '#/components/schemas/Role' }
+        active: { type: boolean }
+    UserCreate:
+      type: object
+      required: [fullName, email, role, password]
+      properties:
+        fullName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        password: { type: string, format: password, minLength: 8 }
+    UserUpdate:
+      type: object
+      required: [fullName, role]
+      properties:
+        fullName: { type: string }
+        phone: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+    ProfileUpdate:
+      type: object
+      required: [fullName]
+      properties:
+        fullName: { type: string }
+        phone: { type: string }
+        avatarUrl: { type: string, format: uri }
+    Scope:
+      type: object
+      description: Affected scope; at least one list must be non-empty.
+      properties:
+        deviceGroups: { type: array, items: { type: string } }
+        departments: { type: array, items: { type: string } }
+        software: { type: array, items: { type: string } }
+        branches: { type: array, items: { type: string } }
+    RollbackPlan:
+      type: object
+      required: [available]
+      properties:
+        available: { type: boolean }
+        steps: { type: string }
+        estimatedMinutes: { type: integer, minimum: 0 }
+        risk: { $ref: '#/components/schemas/Severity' }
+    ChangeInput:
+      type: object
+      required: [type, title, startAt, scope, implementerId, rollbackPlan, status]
+      properties:
+        type: { $ref: '#/components/schemas/ChangeType' }
+        title: { type: string, maxLength: 200 }
+        description: { type: string }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+        scope: { $ref: '#/components/schemas/Scope' }
+        implementerId: { type: string, format: uuid }
+        approverId: { type: string, format: uuid }
+        rollbackPlan: { $ref: '#/components/schemas/RollbackPlan' }
+        status: { $ref: '#/components/schemas/ChangeStatus' }
+    Change:
+      allOf:
+        - $ref: '#/components/schemas/ChangeInput'
+        - type: object
+          required: [id, source, createdAt]
+          properties:
+            id: { type: string, format: uuid }
+            source: { type: string, enum: [MANUAL, IMPORT, API] }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+    TicketInput:
+      type: object
+      required: [createdAt, category, reporterDepartment, reporterBranch, description]
+      properties:
+        createdAt: { type: string, format: date-time }
+        category: { type: string }
+        reporterDepartment: { type: string }
+        reporterBranch: { type: string }
+        deviceGroup: { type: string }
+        software: { type: string }
+        softwareVersion: { type: string }
+        description: { type: string }
+        status: { $ref: '#/components/schemas/TicketStatus' }
+    Ticket:
+      allOf:
+        - $ref: '#/components/schemas/TicketInput'
+        - type: object
+          required: [id, source]
+          properties:
+            id: { type: string, format: uuid }
+            externalId: { type: string }
+            source: { type: string, enum: [MANUAL, IMPORT, API] }
+    TicketPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Ticket' }
+    TicketIngest:
+      allOf:
+        - $ref: '#/components/schemas/TicketInput'
+        - type: object
+          required: [externalId]
+          properties:
+            externalId: { type: string, description: 'Idempotency key; the same id is not stored twice' }
+    ChangeIngest:
+      allOf:
+        - $ref: '#/components/schemas/ChangeInput'
+        - type: object
+          required: [externalId]
+          properties:
+            externalId: { type: string, description: 'Idempotency key; the same id is not stored twice' }
+    IngestResult:
+      type: object
+      properties:
+        accepted: { type: integer }
+        duplicates: { type: integer }
+        rejected:
+          type: array
+          items:
+            type: object
+            properties:
+              externalId: { type: string }
+              reason: { type: string }
+    ImportFile:
+      type: object
+      required: [file]
+      properties:
+        file: { type: string, format: binary, description: CSV or Excel file }
+    ImportPreview:
+      type: object
+      properties:
+        totalRows: { type: integer }
+        validRows: { type: integer }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              row: { type: integer }
+              field: { type: string }
+              message: { type: string }
+        sample:
+          type: array
+          items: { $ref: '#/components/schemas/TicketInput' }
+    ImportResult:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fileName: { type: string }
+        status: { type: string, enum: [SUCCEEDED, FAILED] }
+        importedRows: { type: integer }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    Anomaly:
+      type: object
+      required: [id, group, startAt, actualCount, expectedCount, severity, status]
+      properties:
+        id: { type: string, format: uuid }
+        group:
+          type: object
+          description: The affected group
+          properties:
+            category: { type: string }
+            department: { type: string }
+            branch: { type: string }
+            software: { type: string }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+        actualCount: { type: integer }
+        expectedCount: { type: number }
+        severity: { $ref: '#/components/schemas/Severity' }
+        status: { $ref: '#/components/schemas/AnomalyStatus' }
+        suspectCount: { type: integer }
+    ScoreFactor:
+      type: object
+      required: [name, contribution, explanation]
+      properties:
+        name:
+          type: string
+          enum: [TIME_PROXIMITY, SCOPE_MATCH, CATEGORY_KEYWORD_MATCH, ANOMALY_MAGNITUDE, CHANGE_RISK]
+        contribution: { type: number, description: Points this factor adds to the score }
+        explanation: { type: string }
+    Suspect:
+      type: object
+      required: [id, rank, score, level, change, factors]
+      properties:
+        id: { type: string, format: uuid }
+        rank: { type: integer, minimum: 1 }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        level: { $ref: '#/components/schemas/Severity' }
+        change: { $ref: '#/components/schemas/Change' }
+        factors:
+          type: array
+          items: { $ref: '#/components/schemas/ScoreFactor' }
+        feedback: { type: string, enum: [CORRECT_CAUSE, UNRELATED], nullable: true }
+        hasSuggestion: { type: boolean }
+    SuspectFeedbackInput:
+      type: object
+      required: [verdict]
+      properties:
+        verdict: { type: string, enum: [CORRECT_CAUSE, UNRELATED] }
+        note: { type: string, maxLength: 1000 }
+    TimelineEvent:
+      type: object
+      required: [at, kind, refId, title]
+      properties:
+        at: { type: string, format: date-time }
+        kind: { type: string, enum: [CHANGE, TICKET] }
+        refId: { type: string, format: uuid }
+        title: { type: string }
+    Evidence:
+      type: object
+      required: [type, refId]
+      properties:
+        type: { type: string, enum: [TICKET, CHANGE, PAST_INCIDENT, ROLLBACK_PLAN] }
+        refId: { type: string }
+        note: { type: string }
+    Statement:
+      type: object
+      required: [text, evidence]
+      properties:
+        text: { type: string }
+        evidence:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/Evidence' }
+    SuggestedResolution:
+      type: object
+      required: [suspectId, label, likelyCause, steps]
+      properties:
+        suspectId: { type: string, format: uuid }
+        label:
+          type: string
+          enum: [CONFIRMED, HYPOTHESIS]
+          description: 'CONFIRMED when based on a previously confirmed incident'
+        likelyCause: { $ref: '#/components/schemas/Statement' }
+        steps:
+          type: array
+          items: { $ref: '#/components/schemas/Statement' }
+        confirmedBy: { type: string, format: uuid, nullable: true }
+        confirmedAt: { type: string, format: date-time, nullable: true }
+    SuggestionConfirmationInput:
+      type: object
+      required: [decision]
+      properties:
+        decision: { type: string, enum: [CONFIRMED, REJECTED] }
+        note: { type: string, maxLength: 1000 }
+    Dashboard:
+      type: object
+      properties:
+        openAnomalies:
+          type: array
+          items: { $ref: '#/components/schemas/Anomaly' }
+        ticketsVsBaseline:
+          type: array
+          items:
+            type: object
+            properties:
+              bucketStart: { type: string, format: date-time }
+              actual: { type: integer }
+              baseline: { type: number }
+        topSuspects:
+          type: array
+          items: { $ref: '#/components/schemas/Suspect' }
+    Baseline:
+      type: object
+      properties:
+        computedAt: { type: string, format: date-time }
+        windowWeeks: { type: integer }
+        cells:
+          type: array
+          items:
+            type: object
+            properties:
+              weekday: { type: integer, minimum: 1, maximum: 7 }
+              hour: { type: integer, minimum: 0, maximum: 23 }
+              category: { type: string }
+              mean: { type: number }
+              stdDev: { type: number }
+        actual:
+          type: array
+          items:
+            type: object
+            properties:
+              bucketStart: { type: string, format: date-time }
+              count: { type: integer }
+    Settings:
+      type: object
+      required: [anomalyThreshold, tracingWindowHours, weights, baselineWindowWeeks]
+      properties:
+        anomalyThreshold: { type: number, description: 'Standard deviations above baseline', minimum: 0 }
+        tracingWindowHours: { type: integer, minimum: 1, default: 48 }
+        baselineWindowWeeks: { type: integer, minimum: 1, default: 8 }
+        detectionIntervalMinutes: { type: integer, minimum: 1 }
+        weights:
+          type: object
+          description: Relative weight of each score factor
+          additionalProperties: { type: number, minimum: 0 }
+    AuditLog:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        userName: { type: string }
+        action: { type: string }
+        objectType: { type: string }
+        objectId: { type: string }
+        details: { type: string }
+        at: { type: string, format: date-time }
+    Lookups:
+      type: object
+      properties:
+        categories: { type: array, items: { type: string } }
+        departments: { type: array, items: { type: string } }
+        branches: { type: array, items: { type: string } }
+        software: { type: array, items: { type: string } }
+        deviceGroups: { type: array, items: { type: string } }

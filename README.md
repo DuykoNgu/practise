@@ -224,11 +224,26 @@ Detailed screen IDs, user flows, screen states, accessibility rules, and use-cas
 
 No UI prototype exists yet. Screens will be designed from the [screen inventory](docs/04-information-architecture.md#3-screen-inventory) in a later phase.
 
+## 3. API Contract — OpenAPI 3.0
+
+The REST contract is defined with OpenAPI 3.0 and derived from the use cases and screens. It covers authentication, dashboard, anomalies and ranked suspects, suggested resolutions, changes, tickets and import, baseline, audit log, settings, users, profile, and ITSM ingestion.
+
+- Contract: [`docs/api/openapi.yaml`](docs/api/openapi.yaml)
+- Conventions, role per operation, and screen-to-API mapping: [API documentation](docs/api/README.md)
+
+Key rules in the contract:
+
+- Every operation lists its allowed roles (`x-roles`); the backend enforces them.
+- A suspect carries a rule-based score (0–100) with per-factor explanations; the LLM never computes the score.
+- Every statement of a suggested resolution cites evidence, and only IT Manager, Change Engineer, and Admin can confirm it.
+- ITSM ingestion is idempotent by `externalId`; ticket import is atomic.
+
 ## Documentation
 
 - Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md).
 - Actors and use cases: [Actors, roles, and use cases](docs/03-use-cases.md).
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
+- API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
 
 ## Project Progress
 
@@ -237,12 +252,12 @@ No UI prototype exists yet. Screens will be designed from the [screen inventory]
 - [x] Write user stories following INVEST
 - [x] Design the information architecture and screen permissions
 - [x] Design the screen hierarchy, task flows, and UI states
+- [x] Write the API documentation in OpenAPI 3.0
 - [ ] Write acceptance criteria and business rules
 - [ ] Write non-functional requirements
 - [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
 - [ ] Design the C4 System Context, Container, and Component views
 - [ ] Design the database schema and data relationships
-- [ ] Write the API documentation in OpenAPI 3.0
 - [ ] Design class diagrams and sequence diagrams
 - [ ] Build the UI prototype for each role
 - [ ] Build the backend and connect the frontend to the API
