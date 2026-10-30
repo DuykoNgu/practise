@@ -542,11 +542,13 @@ src/frontend/
 │                        # changes, tickets/import, baseline, audit, settings, users, profile, forbidden
 ├── features/            # auth, dashboard, anomalies, suggestions, changes, tickets,
 │                        # baseline, audit, settings, users, profile (components/, hooks/, api.ts)
-├── components/          # Shared UI
-├── lib/                 # api-client, api-types (from OpenAPI), formatting
+├── components/          # Shared UI; ui/ holds shadcn/ui components
+├── lib/                 # api-client, api-types (from OpenAPI), formatting, utils (cn)
 ├── proxy.ts             # Login and role redirects (Next.js 16 name for middleware)
-├── tests/
-└── .env.example
+├── tests/               # Vitest + Testing Library
+├── components.json      # shadcn/ui configuration
+├── .env.example
+└── package.json         # Tailwind CSS 4, shadcn/ui, react-hook-form + zod, TanStack Query/Table
 ```
 
 ```text
@@ -570,7 +572,8 @@ src/backend/
 ├── tests/               # fakes/, modules/, ai/
 ├── alembic/
 ├── .env.example
-├── requirements.txt
+├── requirements.txt     # runtime dependencies (pinned)
+├── requirements-dev.txt # + pytest, ruff, mypy
 └── Dockerfile           # one image: api or worker
 ```
 

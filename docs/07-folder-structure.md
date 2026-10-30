@@ -50,15 +50,28 @@ src/frontend/
 │   ├── baseline/  audit/  settings/  users/  profile/
 │   │   └── (each: components/, hooks/, api.ts)
 ├── components/                   # Shared UI: tables, forms, modals, skeletons, score labels
+│   └── ui/                       # shadcn/ui components, added with `npm run ui:add <name>`
 ├── lib/
 │   ├── api-client.ts             # Adds the JWT, handles 401/403, reads problem+json
-│   ├── api-types.ts              # Generated from docs/api/openapi.yaml
-│   └── format.ts                 # Dates, times, time zones
+│   ├── api-types.ts              # Generated from docs/api/openapi.yaml (`npm run api:types`)
+│   ├── format.ts                 # Dates, times, time zones
+│   └── utils.ts                  # `cn()` for merging Tailwind classes
 ├── proxy.ts                      # Redirects by login state and role (Next.js 16 name for middleware)
-├── tests/
+├── tests/                        # Vitest + Testing Library (happy-dom)
+├── components.json               # shadcn/ui configuration
+├── next.config.ts  postcss.config.mjs  tsconfig.json  vitest.config.ts  eslint.config.mjs
 ├── .env.example
 └── package.json
 ```
+
+UI stack: **Tailwind CSS 4** (build-time CSS, no runtime) + **shadcn/ui** (Radix primitives copied into `components/ui/`, so only used components ship) + `lucide-react` icons. Forms use `react-hook-form` + `zod`, tables `@tanstack/react-table`, server state `@tanstack/react-query`, charts `recharts`, toasts `sonner`. No other CSS or component library is added.
+
+| Script | Purpose |
+|---|---|
+| `npm run dev` / `build` / `start` | Run, build, and serve the app |
+| `npm run lint` / `typecheck` / `format:check` / `test` | Quality checks |
+| `npm run ui:add <name>` | Add a shadcn/ui component |
+| `npm run api:types` | Regenerate `lib/api-types.ts` from the OpenAPI contract |
 
 Dependency flow:
 
@@ -114,9 +127,12 @@ src/backend/
 │   └── ai/
 ├── alembic/                      # Migrations; the first one is cic.sql
 ├── .env.example
-├── requirements.txt
+├── requirements.txt              # Runtime dependencies (pinned), used by the Dockerfile
+├── requirements-dev.txt          # requirements.txt + pytest, ruff, mypy
 └── Dockerfile                    # One image, run as `api` or `worker`
 ```
+
+Main runtime libraries: FastAPI, Uvicorn, Pydantic 2 + pydantic-settings, SQLAlchemy 2 + psycopg 3, Alembic, PyJWT, pwdlib (Argon2), python-multipart, pandas + NumPy + openpyxl (import, baseline, anomaly detection), Anthropic SDK, httpx.
 
 ### Inside a module (example: `modules/changes/`)
 

@@ -36,6 +36,7 @@ Backend (Python + FastAPI):
 - Schema or migration work: `backend-design:data-modeling-discipline`, `backend-design:migration-safety`.
 - Tests: `backend-design:testing-with-discernment`.
 - Python clean code: PEP 8, full type hints, small single-purpose functions, intention-revealing names, no dead code, no duplicated logic; formatted and linted with `ruff`, type-checked with `mypy`.
+- Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (tools); install with `pip install -r requirements-dev.txt`.
 
 Frontend (Next.js 16 + React 19 + TypeScript):
 
@@ -43,7 +44,9 @@ Frontend (Next.js 16 + React 19 + TypeScript):
 - States and interactions: `design-skills:interaction-design`, following the UI/UX state contract.
 - Labels, errors, empty states: `design-skills:ux-writing`.
 - Before marking a screen done: `design-skills:accessibility-audit`.
-- TypeScript clean code: `strict` mode, no `any`, small components, logic in `hooks/`, API calls only in `api.ts`; linted with ESLint and type-checked with `tsc --noEmit`.
+- UI is built only with Tailwind CSS and shadcn/ui: add components with `npm run ui:add <name>`, style with Tailwind classes and the theme tokens in `app/globals.css`, merge classes with `cn()`. Do not add other CSS or component libraries.
+- Keep pages light: Server Components by default, `"use client"` only where interaction needs it, heavy client parts (charts) loaded with `next/dynamic`.
+- TypeScript clean code: `strict` mode, no `any`, small components, logic in `hooks/`, API calls only in `api.ts`; checked with `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`.
 
 Before every commit: `simplify`, then `code-review`.
 
