@@ -1161,6 +1161,20 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 - [Sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md)
 - [Detailed UML overview](docs/architecture/uml/README.md)
 
+### 6.4 Algorithms — baseline, anomaly detection, suspect ranking
+
+The three algorithms are rule-based and explainable; no LLM is involved until they finish.
+
+| Algorithm | Rule |
+|---|---|
+| Baseline | Mean and std dev of weekly ticket counts per category × weekday × hour (optionally per department or branch), last 8 weeks, empty hours = 0, resolved incidents excluded, ≥ 3 weeks required |
+| Detection | Every 15 min over the last 60 min: `z = (actual − expected) / max(std, √max(expected,1))`; abnormal if z > 3; HIGH ≥ 6, MEDIUM ≥ 4.5 |
+| Ranking | Changes started ≤ 48 h before the spike; five factors in [0,1] (time, scope, keyword, magnitude, risk); weighted score 0–100; capped at 39 when neither scope nor keyword matches |
+
+Printer case, computed by the prototype: baseline 1.5 ± 0.76, 14 tickets → z = 10.2 (HIGH); Windows patch **80 (High, #1)**, unrelated ERP upgrade 39 and mail config 35 (Low).
+
+Formulas, SQL, edge cases, and tuning: [Algorithms](docs/09-algorithms.md).
+
 ## Documentation
 
 - Requirements: [Scope](docs/01-scope.md), [Features](docs/02-features.md), [INVEST backlog](docs/05-invest-requirements.md), [Acceptance criteria](docs/08-acceptance-criteria.md).
@@ -1169,6 +1183,7 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 - UI/UX: [Information architecture](docs/04-information-architecture.md).
 - Architecture: [C4 model](docs/architecture/c4/README.md), [AI pipeline and knowledge graph](docs/architecture/ai-pipeline.md).
 - Folder structure: [Next.js and FastAPI modules](docs/07-folder-structure.md).
+- Algorithms: [Baseline, anomaly detection, suspect ranking](docs/09-algorithms.md).
 - Code-level design: [C4 Level 4](docs/architecture/c4/04-code.md), [class diagrams](docs/architecture/uml/01-class-diagrams.md), [sequence diagrams](docs/architecture/uml/02-sequence-diagrams.md).
 - Database: [Data model](docs/06-data-model.md), [ER diagram](docs/DATABASE.md), [PostgreSQL schema](src/database/cic.sql).
 - API contract: [OpenAPI 3.0 specification](docs/api/openapi.yaml) and [API documentation](docs/api/README.md).
@@ -1182,7 +1197,7 @@ Seven runtime sequences map each user story and OpenAPI operation to its router,
 - [x] Design the screen hierarchy, task flows, and UI states
 - [x] Write acceptance criteria and business rules
 - [x] Write non-functional requirements
-- [ ] Design the baseline, anomaly detection, and suspect ranking algorithms
+- [x] Design the baseline, anomaly detection, and suspect ranking algorithms
 - [x] Design the C4 System Context, Container, and Component views
 - [x] Design the database schema and data relationships
 - [x] Write the API documentation in OpenAPI 3.0

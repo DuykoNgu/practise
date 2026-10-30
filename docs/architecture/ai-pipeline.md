@@ -196,7 +196,7 @@ flowchart LR
     t["14 tickets<br/>'cannot print'<br/>Wed 08:00–08:15"]
     l["3 error logs<br/>'Spooler crashed for user ***'"]
     an["Anomaly<br/>Printing · Accounting<br/>14 vs expected 1.5"]
-    sp["Suspect #1<br/>score 87 · High"]
+    sp["Suspect #1<br/>score 80 · High"]
     out["Suggestion<br/>Cause: patch broke the spooler<br/>(cites log + ticket)<br/>Step 1: uninstall KB-123 — Standard<br/>Step 2: reinstall printer driver — Flexible<br/>Label: Hypothesis"]
 
     patch -- "AFFECTS" --> acc

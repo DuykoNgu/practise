@@ -12,4 +12,4 @@
 
 - C3 components ([03-component.md](../c4/03-component.md)) map to modules in [07-folder-structure.md](../../07-folder-structure.md); this folder shows the classes inside those modules.
 - Class and field names follow [cic.sql](../../../src/database/cic.sql) and [openapi.yaml](../../api/openapi.yaml).
-- Exact formulas for baseline, anomaly threshold, and each score factor belong to the algorithm design; the classes here fix where that logic lives (`BaselineService`, `AnomalyDetectionService`, `SuspectScorer`).
+- Formulas for baseline, anomaly detection, and each score factor are in [09-algorithms.md](../../09-algorithms.md); the classes here fix where that logic lives (`BaselineService`, `AnomalyDetectionService`, `SuspectScorer`).
