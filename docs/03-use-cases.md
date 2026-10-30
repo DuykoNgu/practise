@@ -29,6 +29,8 @@ System actors:
 | Dashboard | ✓ | ✓ | ✓ | ✓ |
 | View anomalies and suspects | ✓ | ✓ | ✓ | ✓ |
 | Give suspect feedback | ✓ | ✓ | ✓ | ✓ |
+| View suggested resolution | ✓ | ✓ | ✓ | ✓ |
+| Confirm / reject suggested resolution | ✓ | ✓ | ✓ | |
 | View changes | ✓ | ✓ | ✓ | ✓ |
 | Add change | ✓ | ✓ | ✓ | |
 | Edit change | ✓ | ✓ | Own records | |
@@ -62,6 +64,8 @@ Menus / buttons are **not displayed** when the user lacks permission. Unauthoriz
 | UC13 | Detect anomalies and rank suspects | Background processor |
 | UC14 | View anomaly detail and ranked suspects | All users |
 | UC15 | Give suspect feedback (correct cause / unrelated) | All users |
+| UC20 | View suggested resolution of a suspect | All users |
+| UC21 | Confirm / reject suggested resolution | IT Manager, Change Engineer, Admin |
 | UC16 | View audit log | IT Manager, Admin |
 | UC17 | Configure thresholds, tracing window, weights | Admin |
 | UC18 | Manage users | Admin |
@@ -76,9 +80,19 @@ The use case diagram is maintained in the [project README](../README.md#13-use-c
 | Item | Content |
 |---|---|
 | Precondition | The user is logged in and at least one anomaly exists. |
-| Main flow | 1. The user opens the dashboard and selects an anomaly. 2. The system shows the affected group, time range, and actual versus baseline tickets. 3. The system lists suspect changes by descending score, each with a per-factor explanation. 4. The user opens a suspect to see related tickets, implementer, and rollback plan. |
+| Main flow | 1. The user opens the dashboard and selects an anomaly. 2. The system shows the affected group, time range, and actual versus baseline tickets. 3. The system lists suspect changes by descending score, each with a per-factor explanation. 4. The user opens a suspect to see related tickets, implementer, rollback plan, and the suggested resolution (UC20). |
 | Alternative flow | No change inside the tracing window → show "No suspect found" and suggest widening the window. |
 | Postcondition | No data is changed. |
+
+## Use case: UC20 / UC21 Suggested resolution
+
+| Item | Content |
+|---|---|
+| Precondition | A suspect exists for an anomaly. |
+| UC20 flow | 1. The user opens a suspect. 2. The system shows the likely cause and suggested resolution, each statement with its cited evidence, labeled **Confirmed** or **Hypothesis**. |
+| UC21 flow | 1. An IT Manager, Change Engineer, or Administrator marks the suggestion as confirmed or rejected, with a note. 2. The system stores the outcome; a confirmed suggestion becomes reusable evidence for later similar incidents. |
+| Alternative flow | No supporting evidence → show "No supported suggestion". Agents can view but cannot confirm. |
+| Rule | The system only suggests; it never executes a rollback or fix. |
 
 ## Business flow: from change to suspect
 
@@ -90,5 +104,6 @@ flowchart LR
     Anomaly --> Rank["Score recent changes"]
     Window --> Rank
     Rank --> Suspects["Ranked suspects with explanation"]
-    Suspects --> Decide["User verifies, rolls back, gives feedback"]
+    Suspects --> Suggest["Suggested resolution with cited evidence"]
+    Suggest --> Decide["User verifies, rolls back, confirms or rejects"]
 ```

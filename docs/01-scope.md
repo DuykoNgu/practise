@@ -60,6 +60,7 @@ The target V1 supports:
 - Baseline calculation and comparison with actual volume.
 - Anomaly detection per category, department, branch, and software.
 - Ranked suspect changes with an explainable score (0–100).
+- Suggested resolution for each suspect change, built from cited evidence (related tickets, rollback plan, previously confirmed incidents) and written by an LLM; every statement must cite its evidence, and a suggestion is marked *confirmed* or *hypothesis*.
 - Suspect feedback (correct cause / unrelated) to measure and tune accuracy.
 - Persisted audit log.
 - System configuration (thresholds, tracing window, ranking weights).
@@ -74,7 +75,9 @@ V1 does **not** include:
 - Replacing the ITSM or CMDB; CIC reads and correlates data only.
 - Root-cause analysis at log or system level.
 - Predicting incidents before a change is applied.
-- Chatbot features or advanced natural-language processing (basic category/keyword matching only).
+- Free-form chatbot or conversational assistant. The LLM only explains suspects and drafts suggested resolutions; it never computes the suspicion score.
+- Resolution suggestions that cannot cite evidence. The system suggests only; it never executes a resolution.
+- Ingesting raw application/error logs (tickets and change records remain the signals in V1).
 - External identity providers and multi-factor authentication.
 
 ## Target V1 architecture
@@ -85,6 +88,7 @@ Web frontend (SPA)
 Multi-tier backend API
     → Relational database (changes, tickets, baselines, correlation results)
     → Background processor (baseline, anomaly detection, ranking)
+    → LLM service (explanation and suggested resolution, with evidence validation)
     → File storage for imports
 ```
 

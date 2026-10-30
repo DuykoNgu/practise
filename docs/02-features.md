@@ -17,6 +17,7 @@ UI product: **CIC**. Target V1 behavior is defined by the use cases, user storie
 | F09 | System Configuration | Yes | Should |
 | F10 | Audit Log | Yes | Should |
 | F11 | Users and Profile | Yes | Must |
+| F12 | Suggested Resolution | Yes | Should |
 
 ## F01 Authentication and authorization
 
@@ -59,7 +60,7 @@ Result: a suspect list ordered by score, with an **explanation per factor** so u
 
 ## F07 Dashboard and Incident Detail
 
-Overview: open anomalies, tickets versus baseline chart, top suspects. Anomaly detail: ranked suspects, related tickets, timeline (changes and tickets), rollback plan, and implementer.
+Overview: open anomalies, tickets versus baseline chart, top suspects. Anomaly detail: ranked suspects, related tickets, timeline (changes and tickets), rollback plan, implementer, and the suggested resolution of each suspect.
 
 ## F08 Suspect Feedback
 
@@ -76,3 +77,15 @@ Records login, change create/update, ticket import, configuration changes, and s
 ## F11 Users and Profile
 
 Administrators create, edit, and disable users and assign roles. Users update their profile and change their password.
+
+## F12 Suggested Resolution
+
+For each suspect change, the system proposes a likely cause and a resolution. The suspicion score is still computed by rules and statistics (F06); the LLM only writes the explanation and the resolution.
+
+- F12.1 Collect evidence: related tickets and time window, scope match, the change's rollback plan, previously confirmed incidents with similar category and scope (from F08 feedback).
+- F12.2 Draft the suggestion with an LLM from that evidence only.
+- F12.3 Validate: every statement must cite its evidence (ticket IDs, change ID, time window); statements without evidence are removed.
+- F12.4 Label each suggestion: **Confirmed** (based on a previously confirmed incident) or **Hypothesis** (needs verification).
+- F12.5 Confirm or reject: only IT Manager, Change Engineer, and Administrator can mark a suggestion as confirmed; the outcome feeds F08.
+
+The system only suggests. Rollback or any fix is performed by a person, never automatically. If no evidence supports a suggestion, the screen shows "No supported suggestion".

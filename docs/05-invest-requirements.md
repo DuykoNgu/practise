@@ -38,6 +38,8 @@ Each requirement is small enough to implement and test independently. Cross-cutt
 | US17 | As an Administrator, I want to create, edit, enable, and disable users so that access remains controlled. | Access administration | US01 | UC18 |
 | US18 | As an authenticated user, I want to maintain my profile and password without changing my role so that my account stays current and secure. | Self-service | US01 | UC19 |
 | US19 | As an ITSM system, I want to push tickets and changes through the API so that data synchronizes automatically. | Automatic ingestion | US01 | UC10 |
+| US20 | As any role, I want to read a suggested cause and resolution for each suspect, with the evidence it cites, so that I know what to do next and can verify it. | Faster resolution | US12, US14 | UC20 |
+| US21 | As an IT Manager, Change Engineer, or Administrator, I want to confirm or reject a suggested resolution so that only verified resolutions are reused. | Trusted knowledge | US20 | UC21 |
 
 ## Per-story INVEST review
 
@@ -64,3 +66,5 @@ Each requirement is small enough to implement and test independently. Cross-cutt
 | US17 | PASS | PASS | PASS | PASS | PASS | PASS | Role set is fixed in the use-case document. |
 | US18 | PASS | PASS | PASS | PASS | PASS | PASS | Role cannot be changed through the profile. |
 | US19 | PASS | PASS | PASS | PARTIAL | PASS | PASS | Payload format and authentication for the ITSM are to be defined. |
+| US20 | PASS | PASS | PASS | PARTIAL | PARTIAL | PASS | Evidence sources and the LLM prompt/validation rules are pending design; may be split into evidence collection and suggestion drafting. |
+| US21 | PASS | PASS | PASS | PASS | PASS | PASS | Reuses the feedback mechanism of US14; permitted roles are fixed. |

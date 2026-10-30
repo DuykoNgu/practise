@@ -34,6 +34,7 @@ flowchart TB
     A2 --> A4["Related tickets"]
     A2 --> A5["Timeline"]
     A2 --> A6["Suspect feedback"]
+    A2 --> A7["Suggested resolution<br/>evidence + confirm"]
 
     Records --> Chg["Changes"]
     Chg --> C1["Change list"]
@@ -70,7 +71,7 @@ flowchart TB
     class CIC root
     class Monitor,Records,Analysis,Admin,Utility group
     class Dash,Anom,Chg,Tkt,Base,Audit,Set,Usr,Prof page
-    class D1,D2,D3,A1,A2,A3,A4,A5,A6,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
+    class D1,D2,D3,A1,A2,A3,A4,A5,A6,A7,C1,C2,C3,T1,T2,T3,B1,B2,S1,S2,S3,U1,U2,U3,P1,P2,P3,Login,Forbidden leaf
 ```
 
 **Navigation model.**
@@ -115,7 +116,7 @@ Unauthorized items are **not rendered** in the sidebar.
 | `SCR-01` | Login | Page | UC01, UC02 |
 | `SCR-02` | Dashboard | Page | UC03 |
 | `SCR-10` | Anomaly list | Page | UC14 |
-| `SCR-11` | Anomaly detail and suspects | Page | UC14, UC15 |
+| `SCR-11` | Anomaly detail, suspects, and suggested resolution | Page | UC14, UC15, UC20, UC21 |
 | `SCR-20` | Change list | Page | UC04 |
 | `SCR-21` | Change create / edit | Modal on change list | UC05, UC06 |
 | `SCR-22` | Change detail | Modal on change list | UC04 |
@@ -146,6 +147,8 @@ Unauthorized items are **not rendered** in the sidebar.
 | US12 | `SCR-10` list and `SCR-11` inspect ranked suspects |
 | US13 | `SCR-11` open suspect to see rollback plan and implementer |
 | US14 | `SCR-11` submit suspect feedback |
+| US20 | `SCR-11` open a suspect to read the suggested resolution and its evidence |
+| US21 | `SCR-11` confirm or reject the suggested resolution |
 | US15 | `SCR-50` filter and inspect audit events |
 | US16 | `SCR-60` edit thresholds, window, weights |
 | US17 | `SCR-70` list/create/edit/enable/disable users |
@@ -201,6 +204,8 @@ flowchart LR
 | Initial loading | Preserve the page shell; show a skeleton for the affected panel or table. |
 | Empty | Explain that no records match; distinguish an empty dataset from filtered-out results; show a permitted primary action. |
 | No suspect | Show "No suspect found" and suggest widening the tracing window. |
+| No supported suggestion | Show "No supported suggestion" when no evidence backs a resolution; never show uncited text. |
+| Suggestion label | Every suggestion shows **Confirmed** or **Hypothesis** and its cited evidence; the confirm action is hidden from roles that cannot confirm. |
 | Validation error | Keep entered values, associate text with the invalid field, and focus the first error. |
 | API error | Show a concise message with a trace reference; do not expose technical details. |
 | Unauthorized | Clear invalid authentication and return to Login. |
