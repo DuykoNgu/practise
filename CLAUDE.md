@@ -44,7 +44,9 @@ Frontend (Next.js 16 + React 19 + TypeScript):
 - States and interactions: `design-skills:interaction-design`, following the UI/UX state contract.
 - Labels, errors, empty states: `design-skills:ux-writing`.
 - Before marking a screen done: `design-skills:accessibility-audit`.
-- UI is built only with Tailwind CSS and shadcn/ui: add components with `npm run ui:add <name>`, style with Tailwind classes and the theme tokens in `app/globals.css`, merge classes with `cn()`. Do not add other CSS or component libraries.
+- UI base is Tailwind CSS + shadcn/ui: add components with `npm run ui:add <name>`, style with Tailwind classes and the theme tokens in `app/globals.css`, merge classes with `cn()`.
+- Research is encouraged to make the UI look better: shadcn-compatible registries and blocks, animation (for example `motion`), icon sets, or other UI libraries. A library may be added when it is built on or works with Tailwind, ships only what is imported, is actively maintained, and does not noticeably slow page load. Mention what was added and why in the commit message. Ask the user when several options are equally good or when a library would replace one already in use.
+- Data is managed with TanStack: server data through `@tanstack/react-query` (`useQuery` / `useMutation` inside `features/<area>/hooks/`, keys per feature, invalidate the affected queries after a mutation), tables through `@tanstack/react-table`. Do not copy server data into `useState`, context, or another state library; local UI state stays in components.
 - Keep pages light: Server Components by default, `"use client"` only where interaction needs it, heavy client parts (charts) loaded with `next/dynamic`.
 - TypeScript clean code: `strict` mode, no `any`, small components, logic in `hooks/`, API calls only in `api.ts`; checked with `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`.
 

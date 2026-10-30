@@ -44,6 +44,7 @@ src/frontend/
 │   │   ├── users/                # SCR-70
 │   │   └── profile/              # SCR-80
 │   ├── forbidden/                # SCR-90
+│   ├── providers.tsx             # TanStack QueryClientProvider (client component)
 │   └── layout.tsx
 ├── features/                     # Business logic per area; routes only compose it
 │   ├── auth/  dashboard/  anomalies/  suggestions/  changes/  tickets/
@@ -64,7 +65,7 @@ src/frontend/
 └── package.json
 ```
 
-UI stack: **Tailwind CSS 4** (build-time CSS, no runtime) + **shadcn/ui** (Radix primitives copied into `components/ui/`, so only used components ship) + `lucide-react` icons. Forms use `react-hook-form` + `zod`, tables `@tanstack/react-table`, server state `@tanstack/react-query`, charts `recharts`, toasts `sonner`. No other CSS or component library is added.
+UI stack: **Tailwind CSS 4** (build-time CSS, no runtime) + **shadcn/ui** (Radix primitives copied into `components/ui/`, so only used components ship) + `lucide-react` icons. Data is managed with TanStack: server state with `@tanstack/react-query` (provider in `app/providers.tsx`), tables with `@tanstack/react-table`. Forms use `react-hook-form` + `zod`, charts `recharts`, toasts `sonner`. Extra UI libraries that work with Tailwind may be added after research when they make the UI better without slowing page load (see `CLAUDE.md`).
 
 | Script | Purpose |
 |---|---|
